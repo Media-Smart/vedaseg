@@ -48,9 +48,11 @@ It is recommended to symlink the dataset root to `${vedaseg_root}/data`, and wri
 ## Train
 
 a. Config
+
 Modify some configuration accordingly in the config file like `configs/unet.py`
 
 b. Run
+
 ```shell
 python tools/trainval.py configs/unet.py
 ```
