@@ -79,8 +79,8 @@ lr_scheduler = dict(type='MultiStepLR', milestones=[12, 16])
 
 # 7. runner
 runner = dict(type='Runner',
-              max_epochs=3000,
+              max_epochs=20,
               trainval_ratio=1,
-              snapshot_interval=100000)
+              snapshot_interval=5)
 # 8. device
 gpu_id = '0'
