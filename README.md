@@ -56,3 +56,6 @@ b. Run
 ```shell
 python tools/trainval.py configs/unet.py
 ```
+
+## Credits
+I got a lot of code from [mmcv](https://github.com/open-mmlab/mmcv) and [mmdetection](https://github.com/open-mmlab/mmdetection), thanks to [open-mmlab](https://github.com/open-mmlab).
