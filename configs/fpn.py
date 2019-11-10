@@ -169,11 +169,11 @@ criterion = dict(type='BCEWithLogitsLoss')
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 
 # 6. lr scheduler
-lr_scheduler = dict(type='MultiStepLR', milestones=[82, 86])
+lr_scheduler = dict(type='MultiStepLR', milestones=[12, 16])
 
 # 7. runner
 runner = dict(type='Runner',
-              max_epochs=90,
+              max_epochs=20,
               trainval_ratio=1,
               snapshot_interval=5)
 # 8. device
