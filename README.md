@@ -1,5 +1,4 @@
 ## Installation
-aa
 ### Requirements
 
 - Linux
