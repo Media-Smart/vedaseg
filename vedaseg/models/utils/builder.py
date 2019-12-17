@@ -4,7 +4,7 @@ from vedaseg.utils import build_from_cfg
 from .registry import UTILS
 
 
-def build_conv_module(cfg, default_args=None):
+def build_module(cfg, default_args=None):
     util = build_from_cfg(cfg, UTILS, default_args)
     return util
 

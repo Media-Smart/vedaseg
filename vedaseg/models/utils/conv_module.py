@@ -193,7 +193,7 @@ class ConvModules(nn.Module):
                        dilation, groups, bias, conv_cfg, norm_cfg, activation,
                        inplace, order, dropout),
         ]
-        for ii in range(num_convs - 1):
+        for ii in range(1, num_convs):
             if dropouts is not None:
                 dropout = dropouts[ii]
             else:

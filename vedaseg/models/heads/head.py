@@ -3,7 +3,8 @@ import torch.nn.functional as F
 import torch.nn as nn
 import logging
 
-from ..utils import ConvModules
+from vedaseg.utils import build_from_cfg
+from ..utils import build_module, ConvModules
 from .registry import HEADS
 from ..weight_init import init_weights
 
@@ -24,6 +25,7 @@ class Head(nn.Module):
                  norm_cfg=dict(type='BN'),
                  activation='relu',
                  num_convs=0,
+                 upsample=None,
                  dropouts=None):
         super().__init__()
 
@@ -42,6 +44,9 @@ class Head(nn.Module):
             ]
         else:
             layers = [nn.Conv2d(in_channels, out_channels, 1)]
+        if upsample:
+            upsample_layer = build_module(upsample)
+            layers.append(upsample_layer)
 
         self.block = nn.Sequential(*layers)
         logger.info('Head init weights')

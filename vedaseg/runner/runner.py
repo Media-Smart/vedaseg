@@ -1,6 +1,7 @@
 import torch
 import logging
 import os.path as osp
+import torch.nn.functional as F
 import numpy as np
 from collections.abc import Iterable
 
@@ -30,7 +31,9 @@ class Runner(object):
                  start_epoch=0,
                  trainval_ratio=1,
                  snapshot_interval=1,
-                 gpu=True):
+                 gpu=True,
+                 test_cfg=None,
+                 test_mode=False):
         self.loader = loader
         self.model = model
         self.criterion = criterion
@@ -43,52 +46,49 @@ class Runner(object):
         self.trainval_ratio = trainval_ratio
         self.snapshot_interval = snapshot_interval
         self.gpu = gpu
-
-        self.train_score = None
-        self.val_score = None
-
-        self._iter = 0
-        self.epoch = 0
+        self.test_cfg = test_cfg
+        self.test_mode = test_mode
 
     def __call__(self):
-        #self.validate_epoch()
-        #exit(0)
-        for epoch in range(self.start_epoch, self.max_epochs):
-            self.train_epoch()
-            self.save_checkpoint(self.workdir)
-            if (epoch + 1) % self.trainval_ratio == 0 \
-                    and self.loader.get('val'):
-                self.validate_epoch()
+        if self.test_mode:
+            self.test_epoch()
+        else:
+            assert self.trainval_ratio > 0
+            for epoch in range(self.start_epoch, self.max_epochs):
+                self.train_epoch()
+                self.save_checkpoint(self.workdir)
+                if self.trainval_ratio > 0 \
+                        and (epoch + 1) % self.trainval_ratio == 0 \
+                        and self.loader.get('val'):
+                    self.validate_epoch()
 
     def train_epoch(self):
-        logger.info('Epoch %d, Start Training' % self.epoch)
-        #self.save_checkpoint(self.workdir)
+        logger.info('Epoch %d, Start training' % self.epoch)
+        iter_based = hasattr(self.lr_scheduler, '_iter_based')
+        self.metric.reset()
         for img, label in self.loader['train']:
             self.train_batch(img, label)
-
-        self.lr_scheduler.step()
+            if iter_based:
+                self.lr_scheduler.step()
+        if not iter_based:
+            self.lr_scheduler.step()
 
     def validate_epoch(self):
-        logger.info('Epoch %d, Start Validating' % self.epoch)
-        score = None
-        img_num = 0
+        logger.info('Epoch %d, Start validating' % self.epoch)
+        self.metric.reset()
         for img, label in self.loader['val']:
-            img_num += img.shape[0]
-            tscore = self.validate_batch(img, label)
-            if score is not None:
-                score += tscore
-            else:
-                score = tscore
-            #logging.info('img_num %d, total batch %d' % (img_num, len(self.loader['val'])))
-            if img_num > 1200:
-                pass
-            #break
-        score /= img_num
-        score = score.max(0)[0].cpu().numpy()
-        logging.info('Dice score is %s' % str(score))
+            self.validate_batch(img, label)
+
+    def test_epoch(self):
+        logger.info('Start testing')
+        logger.info('test info: %s' % self.test_cfg)
+        self.metric.reset()
+        for img, label in self.loader['val']:
+            self.test_batch(img, label)
 
     def train_batch(self, img, label):
         self.model.train()
+
         self.optim.zero_grad()
 
         if self.gpu:
@@ -101,7 +101,6 @@ class Runner(object):
         self.optim.step()
 
         with torch.no_grad():
-            prob = pred.sigmoid()
             
             '''
             import matplotlib.pyplot as plt
@@ -117,22 +116,14 @@ class Runner(object):
             label_name = 'output/%d_gt.jpg' % random_num
             plt.imsave(label_name, label_, cmap='Greys')
             '''
-
-            scores = self.metric(prob, label)
-            #print(score / img.shape[0])
-            score, _ = scores.max(0)
-            score = score.cpu().numpy() / img.shape[0]
-            if self.train_score is not None:
-                self.train_score = 0.9 * self.train_score + 0.1 * score
-            else:
-                self.train_score = score
-        #print('Train, %s' % score)
-        self._iter += 1
-        if self.iter % 1 == 0:
+            _, pred_label = torch.max(pred, dim=1)
+            self.metric.add(pred_label.cpu().numpy(), label.cpu().numpy())
+            miou, ious = self.metric.miou()
+        if self.iter != 0 and self.iter % 10 == 0:
             logger.info(
-                'Train, Epoch %d, Iter %d, LR %s, Loss %.4f, Avg Dice %s' %
+                'Train, Epoch %d, Iter %d, LR %s, Loss %.4f, mIoU %.4f, IoUs %s' %
                 (self.epoch, self.iter, self.lr, loss.item(),
-                 self.train_score))
+                 miou, ious))
 
     def validate_batch(self, img, label):
         self.model.eval()
@@ -140,23 +131,52 @@ class Runner(object):
             if self.gpu:
                 img = img.cuda()
                 label = label.cuda()
+
             pred = self.model(img)
 
-            prob = pred.sigmoid()
+            prob = pred.softmax(dim=1)
+            _, pred_label = torch.max(prob, dim=1)
+            self.metric.add(pred_label.cpu().numpy(), label.cpu().numpy())
+            miou, ious = self.metric.miou()
+            logger.info('Validate, mIoU %.4f, IoUs %s' % (miou, ious))
 
-            score, _ = self.metric(prob, label).max(0)
-            score = score.cpu().numpy() / img.shape[0]
-            if self.val_score is None:
-                self.val_score = score
+    def test_batch(self, img, label):
+        self.model.eval()
+        with torch.no_grad():
+            if self.gpu:
+                img = img.cuda()
+                label = label.cuda()
+
+            if self.test_cfg:
+                scales = self.test_cfg.get('scales', [1.0])
+                flip = self.test_cfg.get('flip', False)
+                biases = self.test_cfg.get('bias', [0.0])
             else:
-                self.val_score = 0.1 * score + 0.9 * self.val_score
+                scales = [1.0]
+                flip = False
+                bias = [0.0]
 
-            #print('Validate, %s' % (self.val_score))
+            assert len(scales) == len(biases)
 
-            score = self.metric(prob, label)
-            #score, _ = self.metric(pred.sigmoid(), label).max(0)
-            #score = score.cpu().numpy() / img.shape[0]
-        return score
+            n, c, h, w = img.size()
+            probs = []
+            for scale, bias in zip(scales, biases):
+                new_h, new_w = int(h*scale + bias), int(w*scale+bias)
+                new_img = F.interpolate(img, size=(new_h, new_w), mode='bilinear', align_corners=True)
+                prob = self.model(new_img).softmax(dim=1)
+                probs.append(prob)
+
+                if flip:
+                    flip_img = new_img.flip(3)
+                    flip_prob = self.model(flip_img).softmax(dim=1)
+                    prob = flip_prob.flip(3)
+                    probs.append(prob)
+            prob = torch.stack(probs, dim=0).mean(dim=0)
+
+            _, pred_label = torch.max(prob, dim=1)
+            self.metric.add(pred_label.cpu().numpy(), label.cpu().numpy())
+            miou, ious = self.metric.miou()
+            logger.info('Test, mIoU %.4f, IoUs %s' % (miou, ious))
 
     def save_checkpoint(self,
                         out_dir,
@@ -210,7 +230,12 @@ class Runner(object):
     @property
     def iter(self):
         """int: Current iteration."""
-        return self._iter
+        return self.lr_scheduler.last_iter
+
+    @iter.setter
+    def iter(self, val):
+        """int: Current epoch."""
+        self.lr_scheduler.last_iter = val
 
     def resume(self,
                checkpoint,
@@ -224,13 +249,12 @@ class Runner(object):
                 checkpoint,
                 map_location=lambda storage, loc: storage.cuda(device_id))
         else:
-            checkpoint = self.load_checkpoint(checkpoint,
-                                              map_location=map_location)
+            checkpoint = self.load_checkpoint(checkpoint, map_location=map_location)
         if 'optimizer' in checkpoint and resume_optimizer:
             self.optim.load_state_dict(checkpoint['optimizer'])
         if resume_epoch:
             self.epoch = checkpoint['meta']['epoch']
             self.start_epoch = self.epoch
-            self._iter = checkpoint['meta']['iter']
+            self.iter = checkpoint['meta']['iter']
         if resume_lr:
             self.lr = checkpoint['meta']['lr']

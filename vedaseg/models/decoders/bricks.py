@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import math
 import copy
 
-from ..utils import build_conv_module, build_torch_nn, ConvModules, ConvModule
+from ..utils import build_module, build_torch_nn, ConvModules, ConvModule
 from .registry import BRICKS
 
 
@@ -27,22 +27,21 @@ class JunctionBlock(nn.Module):
         if top_down_:
             self.from_layer['top_down'] = top_down_.pop('from_layer')
             if 'trans' in top_down_:
-                self.top_down_block.append(
-                    build_conv_module(top_down_['trans']))
-            self.top_down_block.append(build_torch_nn(top_down_['upsample']))
+                self.top_down_block.append(build_module(top_down_['trans']))
+            self.top_down_block.append(build_module(top_down_['upsample']))
         self.top_down_block = nn.Sequential(*self.top_down_block)
 
         if lateral_:
             self.from_layer['lateral'] = lateral_.pop('from_layer')
             if lateral_:
-                self.lateral_block = build_conv_module(lateral_)
+                self.lateral_block = build_module(lateral_)
             else:
                 self.lateral_block = nn.Sequential()
         else:
             self.lateral_block = nn.Sequential()
 
         if post:
-            self.post_block = build_conv_module(post)
+            self.post_block = build_module(post)
         else:
             self.post_block = nn.Sequential()
 
@@ -87,10 +86,12 @@ class FusionBlock(nn.Module):
                  feat_strides,
                  in_channels_list,
                  out_channels_list,
+                 upsample,
                  conv_cfg=dict(type='Conv'),
                  norm_cfg=dict(type='BN'),
                  activation='relu',
-                 common_stride=4):
+                 common_stride=4,
+                 ):
         super().__init__()
         assert method in ('add', 'concat')
         self.method = method
@@ -104,9 +105,7 @@ class FusionBlock(nn.Module):
             out_channels = out_channels_list[idx]
             from_layer = from_layers[idx]
             feat_stride = feat_strides[idx]
-            ups_num = int(
-                max(1,
-                    math.log2(feat_stride) - math.log2(common_stride)))
+            ups_num = int(max(1, math.log2(feat_stride) - math.log2(common_stride)))
             head_ops = []
             for idx2 in range(ups_num):
                 cur_in_channels = in_channels if idx2 == 0 else out_channels
@@ -121,10 +120,7 @@ class FusionBlock(nn.Module):
                 )
                 head_ops.append(conv)
                 if int(feat_stride) != int(common_stride):
-                    head_ops.append(
-                        nn.Upsample(scale_factor=2,
-                                    mode="bilinear",
-                                    align_corners=False))
+                    head_ops.append(build_module(upsample))
             self.blocks.append(nn.Sequential(*head_ops))
 
     def forward(self, feats):

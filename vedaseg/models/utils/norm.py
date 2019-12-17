@@ -11,7 +11,7 @@ norm_cfg = {
 }
 
 
-def build_norm_layer(cfg, num_features, postfix=''):
+def build_norm_layer(cfg, num_features, postfix='', return_layer=False):
     """ Build normalization layer
 
     Args:
@@ -54,4 +54,7 @@ def build_norm_layer(cfg, num_features, postfix=''):
     for param in layer.parameters():
         param.requires_grad = requires_grad
 
-    return name, layer
+    if return_layer:
+        return layer
+    else:
+        return name, layer
