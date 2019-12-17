@@ -30,7 +30,7 @@ conda install pytorch torchvision -c pytorch
 c. Clone the vedaseg repository.
 
 ```shell
-git clone https://github.com/mileistone/vedaseg.git
+git clone https://github.com/Media-Smart/vedaseg.git
 cd vedaseg
 vedaseg_root=${PWD}
 ```
@@ -70,4 +70,4 @@ MS: Multi-scale inputs during evaluation\
 Flip: Adding left-right flipped inputs during evaluation
 
 ## Credits
-I got a lot of code from [mmcv](https://github.com/open-mmlab/mmcv) and [mmdetection](https://github.com/open-mmlab/mmdetection), thanks to [open-mmlab](https://github.com/open-mmlab).
+We got a lot of code from [mmcv](https://github.com/open-mmlab/mmcv) and [mmdetection](https://github.com/open-mmlab/mmdetection), thanks to [open-mmlab](https://github.com/open-mmlab).
