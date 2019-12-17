@@ -64,6 +64,7 @@ Note: All models are evaluated on PASCAL VOC 2012 val set.
 |:---:|:---:|:---:|:---:|:---:|
 | deeplabv3plus | resnet101 | 16 | False | 78.19% |
 | deeplabv3plus | resnet101 | 16 | True | 79.80% |
+
 OS: Output stride used during evaluation\
 MS: Multi-scale inputs during evaluation\
 Flip: Adding left-right flipped inputs during evaluation
