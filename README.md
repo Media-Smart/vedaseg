@@ -62,8 +62,14 @@ Note: All models are evaluated on PASCAL VOC 2012 val set.
 
 | Architecture | backbone | OS | MS & Flip | mIOU |
 |:---:|:---:|:---:|:---:|:---:|
-| deeplabv3plus | resnet101 | 16 | False | 78.19% |
 | deeplabv3plus | resnet101 | 16 | True | 79.80% |
+| deeplabv3plus | resnet101 | 16 | False | 78.19% |
+| deeplabv3 | resnet101 | 16 | True | 78.94% |
+| deeplabv3 | resnet101 | 16 | False | 77.07% |
+| FPN | resnet101 | 2 | True | 75.42% |
+| FPN | resnet101 | 2 | False | 73.65%|
+| unet | resnet101 | 1 | True | 73.09% |
+| unet | resnet101 | 1 | False | 70.98% |
 
 OS: Output stride used during evaluation\
 MS: Multi-scale inputs during evaluation\
