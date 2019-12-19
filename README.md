@@ -56,6 +56,18 @@ b. Run
 python tools/trainval.py configs/unet.py
 ```
 
+## Test
+
+a. Config
+
+Modify some configuration accordingly in the config file like `configs/unet.py`
+
+b. Run
+
+```shell
+python tools/test.py configs/unet.py your_model
+```
+
 ## Performance
 Note: All models are evaluated on PASCAL VOC 2012 val set.
 
