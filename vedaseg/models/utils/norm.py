@@ -8,32 +8,26 @@ from torch._jit_internal import weak_module, weak_script_method
 
 @weak_module
 class FRN(nn.Module):
-    def __init__(self, num_features, eps=1e-6, eps_leanable=False):
+    def __init__(self, num_features, eps=1e-6):
         super(FRN, self).__init__()
 
         self.num_features = num_features
-        self.eps_learnable = eps_leanable
-        self.gamma = Parameter(torch.Tensor(num_features))
-        self.beta = Parameter(torch.Tensor(num_features))
+        self.gamma = Parameter(torch.Tensor(1,num_features,1,1), requires_grad=True)
+        self.beta = Parameter(torch.Tensor(1,num_features,1,1), requires_grad=True)
 
-        if self.eps_learnable:
-            self.eps = Parameter(torch.Tensor([eps]))
-        else:
-            self.register_buffer('eps', torch.Tensor([eps]))
+        self.register_buffer('eps', torch.Tensor([eps]))
 
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.uniform_(self.gamma)
+        nn.init.ones_(self.gamma)
         nn.init.zeros_(self.beta)
 
     @weak_script_method
     def forward(self, x):
-        size = [1 if i != 1 else self.num_features for i in range(len(x.size()))]
-
         nu2 = torch.mean(x.pow(2), dim=[2,3], keepdim=True)
-        x = x * torch.rsqrt(nu2 + torch.abs(self.eps))
-        x = self.gamma.view(*size) * x + self.beta.view(*size)
+        x = x * torch.rsqrt(nu2 + self.eps.abs())
+        x = self.gamma * x + self.beta
 
         return x
 

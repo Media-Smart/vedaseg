@@ -7,22 +7,21 @@ from torch._jit_internal import weak_module, weak_script_method
 
 
 @weak_module
-class TAU(nn.Module):
+class TLU(nn.Module):
     def __init__(self, num_features):
-        super(TAU, self).__init__()
+        super(TLU, self).__init__()
 
         self.num_features = num_features
-        self.tau = Parameter(torch.Tensor(num_features))
+        self.tau = Parameter(torch.Tensor(1,num_features,1,1), requires_grad=True)
 
         self.reset_parameters()
 
     def reset_parameters(self):
-        nn.init.uniform_(self.tau)
+        nn.init.zeros_(self.tau)
 
     @weak_script_method
     def forward(self, x):
-        size = [1 if i != 1 else self.num_features for i in range(len(x.size()))]
-        return torch.max(x, self.tau.view(*size))
+        return torch.max(x, self.tau)
 
     def extra_repr(self):
         return '{num_features}'.format(**self.__dict__)
@@ -30,7 +29,7 @@ class TAU(nn.Module):
 
 act_cfg = {
     'Relu': ('relu', nn.ReLU),
-    'Tau': ('tau', TAU),
+    'Tlu': ('tlu', TLU),
 }
 
 
@@ -65,7 +64,7 @@ def build_act_layer(cfg, num_features, postfix='', layer_only=False):
     name = abbr + str(postfix)
 
     requires_grad = cfg_.pop('requires_grad', True)
-    if layer_type != 'Tau':
+    if layer_type != 'Tlu':
         layer = act_layer(**cfg_)
     else:
         layer = act_layer(num_features, **cfg_)
