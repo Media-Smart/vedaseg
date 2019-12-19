@@ -89,7 +89,7 @@ class FusionBlock(nn.Module):
                  upsample,
                  conv_cfg=dict(type='Conv'),
                  norm_cfg=dict(type='BN'),
-                 activation='relu',
+                 act_cfg=dict(type='Relu', inplace=True),
                  common_stride=4,
                  ):
         super().__init__()
@@ -116,7 +116,7 @@ class FusionBlock(nn.Module):
                     padding=1,
                     conv_cfg=conv_cfg,
                     norm_cfg=norm_cfg,
-                    activation=activation,
+                    act_cfg=act_cfg,
                 )
                 head_ops.append(conv)
                 if int(feat_stride) != int(common_stride):

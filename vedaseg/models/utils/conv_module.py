@@ -5,6 +5,7 @@ import warnings
 import torch.nn as nn
 
 from .norm import build_norm_layer
+from .act import build_act_layer
 from .registry import UTILS
 
 conv_cfg = {
@@ -55,8 +56,7 @@ class ConvModule(nn.Module):
             False.
         conv_cfg (dict): Config dict for convolution layer.
         norm_cfg (dict): Config dict for normalization layer.
-        activation (str or None): Activation type, "ReLU" by default.
-        inplace (bool): Whether to use inplace mode for activation.
+        act_cfg (str or None): Config dict for activation layer.
         order (tuple[str]): The order of conv/norm/activation layers. It is a
             sequence of "conv", "norm" and "act". Examples are
             ("conv", "norm", "act") and ("act", "conv", "norm").
@@ -72,8 +72,7 @@ class ConvModule(nn.Module):
                  bias='auto',
                  conv_cfg=dict(type='Conv'),
                  norm_cfg=None,
-                 activation='relu',
-                 inplace=True,
+                 act_cfg=dict(type='Relu', inplace=True),
                  order=('conv', 'norm', 'act'),
                  dropout=None):
         super(ConvModule, self).__init__()
@@ -81,14 +80,13 @@ class ConvModule(nn.Module):
         assert norm_cfg is None or isinstance(norm_cfg, dict)
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
-        self.activation = activation
-        self.inplace = inplace
+        self.act_cfg = act_cfg
         self.order = order
         assert isinstance(self.order, tuple) and len(self.order) == 3
         assert set(order) == set(['conv', 'norm', 'act'])
 
         self.with_norm = norm_cfg is not None
-        self.with_activatation = activation is not None
+        self.with_act = act_cfg is not None
         self.with_dropout = dropout is not None
         # if the conv layer is before a norm layer, bias is unnecessary.
         if bias == 'auto':
@@ -130,13 +128,14 @@ class ConvModule(nn.Module):
             self.add_module(self.norm_name, norm)
 
         # build activation layer
-        if self.with_activatation:
-            # TODO: introduce `act_cfg` and supports more activation layers
-            if self.activation not in ['relu']:
-                raise ValueError('{} is currently not supported.'.format(
-                    self.activation))
-            if self.activation == 'relu':
-                self.activate = nn.ReLU(inplace=inplace)
+        if self.with_act:
+            # activate layer is after conv layer
+            if order.index('act') > order.index('conv'):
+                act_channels = out_channels
+            else:
+                act_channels = in_channels
+            self.act_name, act = build_act_layer(act_cfg, act_channels)
+            self.add_module(self.act_name, act)
 
         if self.with_dropout:
             self.dropout = nn.Dropout2d(p=dropout)
@@ -145,13 +144,17 @@ class ConvModule(nn.Module):
     def norm(self):
         return getattr(self, self.norm_name)
 
+    @property
+    def activate(self):
+        return getattr(self, self.act_name)
+
     def forward(self, x, activate=True, norm=True):
         for layer in self.order:
             if layer == 'conv':
                 x = self.conv(x)
             elif layer == 'norm' and norm and self.with_norm:
                 x = self.norm(x)
-            elif layer == 'act' and activate and self.with_activatation:
+            elif layer == 'act' and activate and self.with_act:
                 x = self.activate(x)
         if self.with_dropout:
             x = self.dropout(x)
@@ -175,8 +178,7 @@ class ConvModules(nn.Module):
                  bias='auto',
                  conv_cfg=dict(type='Conv'),
                  norm_cfg=None,
-                 activation='relu',
-                 inplace=True,
+                 act_cfg=dict(type='Relu', inplace=True),
                  order=('conv', 'norm', 'act'),
                  dropouts=None,
                  num_convs=1):
@@ -190,8 +192,8 @@ class ConvModules(nn.Module):
 
         layers = [
             ConvModule(in_channels, out_channels, kernel_size, stride, padding,
-                       dilation, groups, bias, conv_cfg, norm_cfg, activation,
-                       inplace, order, dropout),
+                       dilation, groups, bias, conv_cfg, norm_cfg, act_cfg,
+                       order, dropout),
         ]
         for ii in range(1, num_convs):
             if dropouts is not None:
@@ -200,8 +202,8 @@ class ConvModules(nn.Module):
                 dropout = None
             layers.append(
                 ConvModule(out_channels, out_channels, kernel_size, stride,
-                           padding, dilation, groups, bias, conv_cfg, norm_cfg,
-                           activation, inplace, order, dropout))
+                           padding, dilation, groups, bias, conv_cfg, norm_cfg, act_cfg,
+                           order, dropout))
 
         self.block = nn.Sequential(*layers)
 

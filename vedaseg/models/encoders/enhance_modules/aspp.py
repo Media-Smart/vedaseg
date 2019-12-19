@@ -8,12 +8,15 @@ import logging
 from .registry import ENHANCE_MODULES
 from ...weight_init import init_weights
 from ...utils.norm import build_norm_layer
+from ...utils.act import build_act_layer
+
+from functools import partial
 
 logger = logging.getLogger()
 
 
 class ASPPConv(nn.Sequential):
-    def __init__(self, in_channels, out_channels, dilation, norm_cfg=dict(type='BN')):
+    def __init__(self, in_channels, out_channels, dilation, norm_layer, act_layer):
         modules = [
             nn.Conv2d(in_channels,
                       out_channels,
@@ -21,18 +24,18 @@ class ASPPConv(nn.Sequential):
                       padding=dilation,
                       dilation=dilation,
                       bias=False),
-            build_norm_layer(norm_cfg, out_channels, return_layer=True),
-            nn.ReLU(inplace=True)
+            norm_layer(out_channels),
+            act_layer(out_channels)
         ]
         super(ASPPConv, self).__init__(*modules)
 
 
 class ASPPPooling(nn.Sequential):
-    def __init__(self, in_channels, out_channels, norm_cfg=dict(type='BN')):
+    def __init__(self, in_channels, out_channels, norm_layer, act_layer):
         super(ASPPPooling, self).__init__(
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(in_channels, out_channels, 1, bias=False),
-            build_norm_layer(norm_cfg, out_channels, return_layer=True), nn.ReLU(inplace=True))
+            norm_layer(out_channels), act_layer(out_channels))
 
     def forward(self, x):
         size = x.shape[-2:]
@@ -43,26 +46,35 @@ class ASPPPooling(nn.Sequential):
 @ENHANCE_MODULES.register_module
 class ASPP(nn.Module):
     def __init__(self, in_channels, out_channels, atrous_rates, from_layer,
-                 to_layer, dropout=None, norm_cfg=dict(type='BN')):
+                 to_layer, dropout=None, norm_cfg=None, act_cfg=None):
         super(ASPP, self).__init__()
         self.from_layer = from_layer
         self.to_layer = to_layer
+
+        if norm_cfg is None:
+            norm_cfg = dict(type='BN')
+        norm_layer = partial(build_norm_layer, norm_cfg, layer_only=True)
+
+        if act_cfg is None:
+            act_cfg = dict(type='Relu', inplace=True)
+        act_layer = partial(build_act_layer, act_cfg, layer_only=True)
+
         modules = []
         modules.append(
             nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, bias=False),
-                          build_norm_layer(norm_cfg, out_channels, return_layer=True), nn.ReLU(inplace=True)))
+                          norm_layer(out_channels), act_layer(out_channels)))
 
         rate1, rate2, rate3 = tuple(atrous_rates)
-        modules.append(ASPPConv(in_channels, out_channels, rate1, norm_cfg))
-        modules.append(ASPPConv(in_channels, out_channels, rate2, norm_cfg))
-        modules.append(ASPPConv(in_channels, out_channels, rate3, norm_cfg))
-        modules.append(ASPPPooling(in_channels, out_channels, norm_cfg))
+        modules.append(ASPPConv(in_channels, out_channels, rate1, norm_layer, act_layer))
+        modules.append(ASPPConv(in_channels, out_channels, rate2, norm_layer, act_layer))
+        modules.append(ASPPConv(in_channels, out_channels, rate3, norm_layer, act_layer))
+        modules.append(ASPPPooling(in_channels, out_channels, norm_layer, act_layer))
 
         self.convs = nn.ModuleList(modules)
 
         self.project = nn.Sequential(
             nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
-            build_norm_layer(norm_cfg, out_channels, return_layer=True), nn.ReLU(inplace=True))
+            norm_layer(out_channels), act_layer(out_channels))
         self.with_dropout = dropout is not None
         if self.with_dropout:
             self.dropout = nn.Dropout(dropout)

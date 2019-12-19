@@ -115,7 +115,7 @@ model = dict(
                     out_channels=48,
                     kernel_size=1,
                     norm_cfg=dict(type='BN'),
-                    activation='relu',
+                    act_cfg=dict(type='Relu', inplace=True),
                 ),
                 post=None,
                 to_layer='p5',

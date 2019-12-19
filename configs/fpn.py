@@ -94,7 +94,7 @@ model = dict(
                     out_channels=256,
                     kernel_size=1,
                     norm_cfg=None,
-                    activation=None,
+                    act_cfg=None,
                 ),
                 post=dict(
                     type='ConvModule',
@@ -103,7 +103,7 @@ model = dict(
                     kernel_size=3,
                     padding=1,
                     norm_cfg=None,
-                    activation=None,
+                    act_cfg=None,
                 ),
                 to_layer='p5',
             ),  # 32
@@ -128,7 +128,7 @@ model = dict(
                     out_channels=256,
                     kernel_size=1,
                     norm_cfg=None,
-                    activation=None
+                    act_cfg=None
                 ),
                 post=dict(
                     type='ConvModule',
@@ -137,7 +137,7 @@ model = dict(
                     kernel_size=3,
                     padding=1,
                     norm_cfg=None,
-                    activation=None,
+                    act_cfg=None,
                 ),
                 to_layer='p4',
             ),  # 16
@@ -162,7 +162,7 @@ model = dict(
                     out_channels=256,
                     kernel_size=1,
                     norm_cfg=None,
-                    activation=None,
+                    act_cfg=None,
                 ),
                 post=dict(
                     type='ConvModule',
@@ -171,7 +171,7 @@ model = dict(
                     kernel_size=3,
                     padding=1,
                     norm_cfg=None,
-                    activation=None
+                    act_cfg=None
                 ),
                 to_layer='p3',
             ),  # 8
@@ -196,7 +196,7 @@ model = dict(
                     out_channels=256,
                     kernel_size=1,
                     norm_cfg=None,
-                    activation=None,
+                    act_cfg=None,
                 ),
                 post=dict(
                     type='ConvModule',
@@ -205,7 +205,7 @@ model = dict(
                     kernel_size=3,
                     padding=1,
                     norm_cfg=None,
-                    activation=None,
+                    act_cfg=None,
                 ),
                 to_layer='p2',
             ),  # 4
@@ -218,7 +218,7 @@ model = dict(
             in_channels_list=[256, 256, 256, 256],
             out_channels_list=[128, 128, 128, 128],
             norm_cfg=dict(type='BN'),
-            activation='relu',
+            act_cfg=dict(type='Relu', inplace=True),
             common_stride=4,
             upsample=dict(
                 type='Upsample',
@@ -236,7 +236,6 @@ model = dict(
         inter_channels=128,
         out_channels=nclasses,
         num_convs=3,
-        norm_cfg=dict(type='BN'),
         upsample=dict(
             type='Upsample',
             size=(513, 513),

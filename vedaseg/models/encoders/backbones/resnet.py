@@ -7,9 +7,12 @@ try:
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
+from functools import partial
+
 from .registry import BACKBONES
 from ...weight_init import init_weights
 from ...utils.norm import build_norm_layer
+from ...utils.act import build_act_layer
 
 logger = logging.getLogger()
 
@@ -28,8 +31,8 @@ def conv1x1(in_planes, out_planes, stride=1):
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_cfg=dict(type='BN')):
+    def __init__(self, inplanes, planes, norm_layer, act_layer, stride=1, downsample=None, groups=1,
+                 base_width=64, dilation=1):
         super(BasicBlock, self).__init__()
         if groups != 1 or base_width != 64:
             raise ValueError('BasicBlock only supports groups=1 and base_width=64')
@@ -37,11 +40,12 @@ class BasicBlock(nn.Module):
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = build_norm_layer(norm_cfg, planes, return_layer=True)
-        self.relu = nn.ReLU(inplace=True)
+        self.bn1 = norm_layer(inplanes)
+        self.relu1 = act_layer(inplanes)
         self.conv2 = conv3x3(planes, planes)
-        self.bn2 = build_norm_layer(norm_cfg, planes, return_layer=True)
+        self.bn2 = act_layer(planes)
         self.downsample = downsample
+        self.relu2 = act_layer(planes)
         self.stride = stride
 
     def forward(self, x):
@@ -49,7 +53,7 @@ class BasicBlock(nn.Module):
 
         out = self.conv1(x)
         out = self.bn1(out)
-        out = self.relu(out)
+        out = self.relu1(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
@@ -58,7 +62,7 @@ class BasicBlock(nn.Module):
             identity = self.downsample(x)
 
         out += identity
-        out = self.relu(out)
+        out = self.relu2(out)
 
         return out
 
@@ -66,18 +70,21 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_cfg=dict(type='BN')):
+    def __init__(self, inplanes, planes, norm_layer, act_layer, stride=1, downsample=None, groups=1,
+                 base_width=64, dilation=1,):
         super(Bottleneck, self).__init__()
         width = int(planes * (base_width / 64.)) * groups
+
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv1x1(inplanes, width)
-        self.bn1 = build_norm_layer(norm_cfg, width, return_layer=True)
+        self.bn1 = norm_layer(width)
+        self.relu1 = act_layer(width)
         self.conv2 = conv3x3(width, width, stride, groups, dilation)
-        self.bn2 = build_norm_layer(norm_cfg, width, return_layer=True)
+        self.bn2 = norm_layer(width)
+        self.relu2 = act_layer(width)
         self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = build_norm_layer(norm_cfg, planes * self.expansion, return_layer=True)
-        self.relu = nn.ReLU(inplace=True)
+        self.bn3 = norm_layer(planes * self.expansion)
+        self.relu3 = act_layer(planes * self.expansion)
         self.downsample = downsample
         self.stride = stride
 
@@ -86,11 +93,11 @@ class Bottleneck(nn.Module):
 
         out = self.conv1(x)
         out = self.bn1(out)
-        out = self.relu(out)
+        out = self.relu1(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
-        out = self.relu(out)
+        out = self.relu2(out)
 
         out = self.conv3(out)
         out = self.bn3(out)
@@ -99,7 +106,7 @@ class Bottleneck(nn.Module):
             identity = self.downsample(x)
 
         out += identity
-        out = self.relu(out)
+        out = self.relu3(out)
 
         return out
 
@@ -127,9 +134,16 @@ class ResNetCls(nn.Module):
 
     def __init__(self, block, layers, num_classes=1000, zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None, multi_grid=None,
-                 norm_cfg=dict(type='BN')):
+                 norm_cfg=None, act_cfg=None):
         super(ResNetCls, self).__init__()
-        self._norm_cfg = norm_cfg
+
+        if norm_cfg is None:
+            norm_cfg = dict(type='BN')
+        self._norm_layer = partial(build_norm_layer, norm_cfg, layer_only=True)
+
+        if act_cfg is None:
+            act_cfg = dict(type='Relu', inplace=True)
+        self._act_layer = partial(build_act_layer, act_cfg, layer_only=True)
 
         self.inplanes = 64
         self.dilation = 1
@@ -145,8 +159,8 @@ class ResNetCls(nn.Module):
         self.base_width = width_per_group
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
                                bias=False)
-        self.bn1 = build_norm_layer(self._norm_cfg, self.inplanes, return_layer=True)
-        self.relu = nn.ReLU(inplace=True)
+        self.bn1 = self._norm_layer(self.inplanes)
+        self.relu1 = self._act_layer(self.inplanes)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
@@ -176,7 +190,8 @@ class ResNetCls(nn.Module):
                     nn.init.constant_(m.bn2.weight, 0)
 
     def _make_layer(self, block, planes, blocks, stride=1, dilate=False, multi_grid=None):
-        norm_cfg = self._norm_cfg
+        norm_layer = self._norm_layer
+        act_layer = self._act_layer
         downsample = None
         previous_dilation = self.dilation
 
@@ -191,24 +206,25 @@ class ResNetCls(nn.Module):
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
-                build_norm_layer(norm_cfg, planes * block.expansion, return_layer=True),
+                norm_layer(planes * block.expansion),
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, self.groups,
-                            self.base_width, previous_dilation*multi_grid[0], norm_cfg))
+        layers.append(block(self.inplanes, planes, norm_layer, act_layer,
+                            stride, downsample, self.groups,
+                            self.base_width, previous_dilation*multi_grid[0]))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes, groups=self.groups,
-                                base_width=self.base_width, dilation=self.dilation*multi_grid[i],
-                                norm_cfg=norm_cfg))
+            layers.append(block(self.inplanes, planes, norm_layer=norm_layer, act_layer=act_layer,
+                                groups=self.groups,
+                                base_width=self.base_width, dilation=self.dilation*multi_grid[i],))
 
         return nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu(x)
+        x = self.relu1(x)
         x = self.maxpool(x)
 
         x = self.layer1(x)
@@ -230,19 +246,21 @@ class ResNet(ResNetCls):
     Args:
         pretrain(bool)
     """
-    def __init__(self, arch, replace_stride_with_dilation=None, multi_grid=None, pretrain=True, norm_cfg=dict(type='BN')):
+    def __init__(self, arch, replace_stride_with_dilation=None, multi_grid=None, pretrain=True,
+                 norm_cfg=None, act_cfg=None):
         cfg = MODEL_CFGS[arch]
         super().__init__(
             cfg['block'],
             cfg['layer'],
             replace_stride_with_dilation=replace_stride_with_dilation,
             multi_grid=multi_grid,
-            norm_cfg=norm_cfg)
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
 
         if pretrain:
             logger.info('ResNet init weights from pretreain')
             state_dict = load_state_dict_from_url(cfg['weights_url'])
-            self.load_state_dict(state_dict)
+            self.load_state_dict(state_dict, strict=False)
         else:
             logger.info('ResNet init weights')
             init_weights(self.modules())
@@ -254,7 +272,7 @@ class ResNet(ResNetCls):
 
         x0 = self.conv1(x)
         x0 = self.bn1(x0)
-        x0 = self.relu(x0)  # 2
+        x0 = self.relu1(x0)  # 2
         feats['c1'] = x0
 
         x1 = self.maxpool(x0)

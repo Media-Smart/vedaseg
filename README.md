@@ -59,7 +59,6 @@ python tools/trainval.py configs/unet.py
 ## Performance
 Note: All models are evaluated on PASCAL VOC 2012 val set.
 
-
 | Architecture | backbone | OS | MS & Flip | mIOU |
 |:---:|:---:|:---:|:---:|:---:|
 | deeplabv3plus | resnet101 | 16 | True | 79.80% |
@@ -67,7 +66,9 @@ Note: All models are evaluated on PASCAL VOC 2012 val set.
 | deeplabv3 | resnet101 | 16 | True | 78.94% |
 | deeplabv3 | resnet101 | 16 | False | 77.07% |
 | FPN | resnet101 | 2 | True | 75.42% |
-| FPN | resnet101 | 2 | False | 73.65%|
+| FPN | resnet101 | 2 | False | 73.65% |
+| PSPNet | resnet101 | 8 | True | 74.68% |
+| PSPNet | resnet101 | 8 | False | 73.71% |
 | unet | resnet101 | 1 | True | 73.09% |
 | unet | resnet101 | 1 | False | 70.98% |
 

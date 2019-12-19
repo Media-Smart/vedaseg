@@ -8,24 +8,32 @@ import logging
 from ...weight_init import init_weights
 from .registry import ENHANCE_MODULES
 from ...utils.norm import build_norm_layer
+from ...utils.act import build_act_layer
 
 logger = logging.getLogger()
 
 
 @ENHANCE_MODULES.register_module
 class PPM(nn.Module):
-    def __init__(self, in_channels, out_channels, bins, from_layer, to_layer, norm_cfg=dict(type='BN')):
+    def __init__(self, in_channels, out_channels, bins, from_layer, to_layer, norm_cfg=None, act_cfg=None):
         super(PPM, self).__init__()
         self.from_layer = from_layer
         self.to_layer = to_layer
+
+        if norm_cfg is None:
+            norm_cfg = dict(type='BN')
+
+        if act_cfg is None:
+            act_cfg = dict(type='Relu', inplace=True)
+
         self.blocks = nn.ModuleList()
         for bin_ in bins:
             self.blocks.append(
                 nn.Sequential(
                     nn.AdaptiveAvgPool2d(bin_),
                     nn.Conv2d(in_channels, out_channels, 1, bias=False),
-                    build_norm_layer(norm_cfg, out_channels, return_layer=True),
-                    nn.ReLU(inplace=True)
+                    build_norm_layer(norm_cfg, out_channels, layer_only=True),
+                    build_act_layer(act_cfg, out_channels, layer_only=True)
                 )
             )
         logger.info('PPM init weights')

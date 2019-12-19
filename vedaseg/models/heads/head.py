@@ -23,7 +23,7 @@ class Head(nn.Module):
                  inter_channels=None,
                  conv_cfg=dict(type='Conv'),
                  norm_cfg=dict(type='BN'),
-                 activation='relu',
+                 act_cfg=dict(type='Relu', inplace=True),
                  num_convs=0,
                  upsample=None,
                  dropouts=None):
@@ -37,7 +37,7 @@ class Head(nn.Module):
                             padding=1,
                             conv_cfg=conv_cfg,
                             norm_cfg=norm_cfg,
-                            activation=activation,
+                            act_cfg=act_cfg,
                             num_convs=num_convs,
                             dropouts=dropouts),
                 nn.Conv2d(inter_channels, out_channels, 1)
