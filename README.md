@@ -88,5 +88,7 @@ OS: Output stride used during evaluation\
 MS: Multi-scale inputs during evaluation\
 Flip: Adding left-right flipped inputs during evaluation
 
+You can get model weights from [GoogleDrive](https://drive.google.com/drive/folders/1ooIOX5Aeu-0aHJYT1eZgzkSnZUvPi2by).
+
 ## Credits
 We got a lot of code from [mmcv](https://github.com/open-mmlab/mmcv) and [mmdetection](https://github.com/open-mmlab/mmdetection), thanks to [open-mmlab](https://github.com/open-mmlab).
