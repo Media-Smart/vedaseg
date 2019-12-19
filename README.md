@@ -42,6 +42,23 @@ pip install -r requirements.txt
 ```
 
 ## Prepare data
+Download [Pascal VOC 2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Pascal VOC 2012 augmented](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz), resulting in 10,582 training images(trainaug).
+```
+cd ${vedaseg_root}
+mkdir ${vedaseg_root}/data
+cd ${vedaseg_root}/data
+wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz
+
+tar xf VOCtrainval_11-May-2012.tar
+tar xf benchmark.tgz
+python ../tools/encode_voc12_aug.py
+python ../tools/encode_voc12.py
+mkdir VOCdevkit/VOC2012/EncodeSegmentationClass
+cp benchmark_RELEASE/dataset/encode_cls/* VOCdevkit/VOC2012/EncodeSegmentationClass
+cp VOCdevkit/VOC2012/EncodeSegmentationClassPart/* VOCdevkit/VOC2012/EncodeSegmentationClass
+```
+
 It is recommended to symlink the dataset root to `${vedaseg_root}/data`, and write your own dataset class in `vedaseg/datasets`
 
 ## Train
@@ -65,7 +82,7 @@ Modify some configuration accordingly in the config file like `configs/unet.py`
 b. Run
 
 ```shell
-python tools/test.py configs/unet.py your_model
+python tools/test.py configs/unet.py path_to_unet_weights
 ```
 
 ## Performance
