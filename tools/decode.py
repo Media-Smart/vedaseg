@@ -41,7 +41,7 @@ def main():
     for idx, item in enumerate(items):
     root = 'VOCdevkit/VOC2012'
     src_name = 'EncodeSegmentationClass'
-    dst_name = 'DecodeSegmentationClass1'
+    dst_name = 'DecodeSegmentationClass'
     src_dir = '%s/%s' % (root, src_name)
     dst_dir = '%s/%s' % (root, dst_name)
     os.makedirs(dst_dir)
