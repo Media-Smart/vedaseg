@@ -7,8 +7,8 @@ seed = 0
 # 1. logging
 logger = dict(
     handlers=(
-        # dict(type='StreamHandler', level='INFO'),
-        dict(type='FileHandler', level='INFO'),
+        dict(type='StreamHandler', level='INFO'),
+        # dict(type='FileHandler', level='INFO'),
     ),
 )
 
