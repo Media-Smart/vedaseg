@@ -1,5 +1,5 @@
 ## Introduction
-vedaseg is an open source semantic segmentation framework based on PyTorch.
+vedaseg is an open source semantic segmentation toolbox based on PyTorch.
 
 ## Features
 
