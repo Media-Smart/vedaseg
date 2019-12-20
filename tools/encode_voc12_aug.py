@@ -8,7 +8,7 @@ import numpy as np
 def main():
     root = 'benchmark_RELEASE/dataset'
     src_name = 'cls'
-    dst_name = 'encode_clsx'
+    dst_name = 'encode_cls'
     src_dir = '%s/%s' % (root, src_name)
     dst_dir = '%s/%s' % (root, dst_name)
     os.makedirs(dst_dir)
