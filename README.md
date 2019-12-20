@@ -61,7 +61,7 @@ conda create -n vedaseg python=3.7 -y
 conda activate vedaseg
 ```
 
-b. Install PyTorch and torchvision following the [official instructions](https://pytorch.org/), e.g.,
+b. Install PyTorch and torchvision following the [official instructions](https://pytorch.org/), *e.g.*,
 
 ```shell
 conda install pytorch torchvision -c pytorch
@@ -112,14 +112,16 @@ Modify some configuration accordingly in the config file like `configs/unet.py`
 b. Run
 
 ```shell
-python tools/trainval.py configs/unet.py
+python tools/trainval.py configs/deeplabv3plus.py
 ```
+
+Snapshots and logs will be generated at `${vedaseg_root}/workdir`.
 
 ## Test
 
 a. Config
 
-Modify some configuration accordingly in the config file like `configs/unet.py`
+Modify some configuration accordingly in the config file like `configs/deeplabv3plus.py`
 
 b. Run
 
@@ -129,7 +131,7 @@ python tools/test.py configs/unet.py path_to_unet_weights
 
 ## Contact
 
-This repo is currently maintained by Hongxiang Cai ([@hxcai](http://github.com/hxcai)), Yichao Xiong ([@mileistone](https://github.com/yhcao6)).
+This repository is currently maintained by Hongxiang Cai ([@hxcai](http://github.com/hxcai)), Yichao Xiong ([@mileistone](https://github.com/yhcao6)).
 
 ## Credits
 We got a lot of code from [mmcv](https://github.com/open-mmlab/mmcv) and [mmdetection](https://github.com/open-mmlab/mmdetection), thanks to [open-mmlab](https://github.com/open-mmlab).
