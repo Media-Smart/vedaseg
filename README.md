@@ -17,7 +17,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Benchmark and model zoo
 
-Note: All models are evaluated on PASCAL VOC 2012 val set.
+Note: All models are trained only on PASCAL VOC 2012 trainaug dataset and evaluated on PASCAL VOC 2012 val dataset.
 
 | Architecture | backbone | OS | MS & Flip | mIOU|
 |:---:|:---:|:---:|:---:|:---:|
