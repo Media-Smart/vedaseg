@@ -32,15 +32,6 @@ def color_map(N=256, normalized=False):
 def main():
     root = 'VOCdevkit/VOC2012'
     src_name = 'EncodeSegmentationClass'
-    dst_name = 'DecodeSegmentationClass1'
-    src_dir = '%s/%s' % (root, src_name)
-    dst_dir = '%s/%s' % (root, dst_name)
-    os.makedirs(dst_dir)
-    items = glob.glob('%s/*.png' % src_dir)
-    total = len(items)
-    for idx, item in enumerate(items):
-    root = 'VOCdevkit/VOC2012'
-    src_name = 'EncodeSegmentationClass'
     dst_name = 'DecodeSegmentationClass'
     src_dir = '%s/%s' % (root, src_name)
     dst_dir = '%s/%s' % (root, dst_name)
