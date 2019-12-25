@@ -9,7 +9,7 @@ vedaseg is an open source semantic segmentation toolbox based on PyTorch.
 
 - **Support of several popular frameworks**
 
-  The toolbox supports several popular and semantic segmentation frameworks out of box, *e.g.* DeepLabv3+, DeepLabv3, UNet, PSPNet, FPN, etc.
+  The toolbox supports several popular and semantic segmentation frameworks out of box, *e.g.* DeepLabv3+, DeepLabv3, U-Net, PSPNet, FPN, etc.
 
 ## License
 
