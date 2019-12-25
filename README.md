@@ -109,7 +109,7 @@ comm -23 <(cat benchmark_RELEASE/dataset/{train,val}.txt VOCdevkit/VOC2012/Image
 
 a. Config
 
-Modify some configuration accordingly in the config file like `configs/unet.py`
+Modify some configuration accordingly in the config file like `configs/deeplabv3plus.py`
 
 b. Run
 
@@ -128,7 +128,7 @@ Modify some configuration accordingly in the config file like `configs/deeplabv3
 b. Run
 
 ```shell
-python tools/test.py configs/unet.py path_to_unet_weights
+python tools/test.py configs/deeplabv3plus.py path_to_deeplabv3plus_weights
 ```
 
 ## Contact
