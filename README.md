@@ -106,6 +106,7 @@ mkdir VOCdevkit/VOC2012/EncodeSegmentationClass
 
 comm -23 <(cat benchmark_RELEASE/dataset/{train,val}.txt VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt | sort -u) <(cat VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt | sort -u) > VOCdevkit/VOC2012/ImageSets/Segmentation/trainaug.txt
 ```
+To avoid tedious operations, you could save the above linux commands as a shell file and execute it.
 
 ## Train
 
