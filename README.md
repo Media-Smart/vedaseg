@@ -99,8 +99,10 @@ python ../tools/encode_voc12_aug.py
 python ../tools/encode_voc12.py
 
 mkdir VOCdevkit/VOC2012/EncodeSegmentationClass
-cp benchmark_RELEASE/dataset/encode_cls/* VOCdevkit/VOC2012/EncodeSegmentationClass
-cp VOCdevkit/VOC2012/EncodeSegmentationClassPart/* VOCdevkit/VOC2012/EncodeSegmentationClass
+#cp benchmark_RELEASE/dataset/encode_cls/* VOCdevkit/VOC2012/EncodeSegmentationClass
+(cd benchmark_RELEASE/dataset/encode_cls; cp * ${vedaseg_root}/data/VOCdevkit/VOC2012/EncodeSegmentationClass)
+#cp VOCdevkit/VOC2012/EncodeSegmentationClassPart/* VOCdevkit/VOC2012/EncodeSegmentationClass
+(cd VOCdevkit/VOC2012/EncodeSegmentationClassPart; cp * ${vedaseg_root}/data/VOCdevkit/VOC2012/EncodeSegmentationClass)
 
 comm -23 <(cat benchmark_RELEASE/dataset/{train,val}.txt VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt | sort -u) <(cat VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt | sort -u) > VOCdevkit/VOC2012/ImageSets/Segmentation/trainaug.txt
 ```
