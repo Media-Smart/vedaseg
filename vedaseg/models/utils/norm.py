@@ -3,10 +3,8 @@
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
-from torch._jit_internal import weak_module, weak_script_method
 
 
-@weak_module
 class FRN(nn.Module):
     def __init__(self, num_features, eps=1e-6):
         super(FRN, self).__init__()
@@ -23,7 +21,6 @@ class FRN(nn.Module):
         nn.init.ones_(self.gamma)
         nn.init.zeros_(self.beta)
 
-    @weak_script_method
     def forward(self, x):
         nu2 = torch.mean(x.pow(2), dim=[2,3], keepdim=True)
         x = x * torch.rsqrt(nu2 + self.eps.abs())

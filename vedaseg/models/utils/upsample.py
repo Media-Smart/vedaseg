@@ -1,13 +1,11 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from torch._jit_internal import weak_module, weak_script_method
 
 
 from .registry import UTILS
 
 
 @UTILS.register_module
-@weak_module
 class Upsample(nn.Module):
     __constants__ = ['size', 'scale_factor', 'scale_bias', 'mode', 'align_corners', 'name']
 
@@ -21,7 +19,6 @@ class Upsample(nn.Module):
 
         assert (self.size is None) ^ (self.scale_factor is None)
 
-    @weak_script_method
     def forward(self, x):
         if self.size:
             size = self.size

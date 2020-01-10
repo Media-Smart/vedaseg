@@ -3,10 +3,8 @@
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
-from torch._jit_internal import weak_module, weak_script_method
 
 
-@weak_module
 class TLU(nn.Module):
     def __init__(self, num_features):
         super(TLU, self).__init__()
@@ -19,7 +17,6 @@ class TLU(nn.Module):
     def reset_parameters(self):
         nn.init.zeros_(self.tau)
 
-    @weak_script_method
     def forward(self, x):
         return torch.max(x, self.tau)
 
