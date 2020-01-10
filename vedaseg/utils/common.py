@@ -7,10 +7,10 @@ import numpy as np
 import logging
 
 
-def build_from_cfg(cfg, parent, default_args=None, src='registry'):
-    if src == 'registry':
+def build_from_cfg(cfg, parent, default_args=None, method='registry'):
+    if method == 'registry':
         return obj_from_dict_registry(cfg, parent, default_args)
-    elif src == 'module':
+    elif method == 'module':
         return obj_from_dict_module(cfg, parent, default_args)
     else:
         raise ValueError('Method %s is not supported' % method)
