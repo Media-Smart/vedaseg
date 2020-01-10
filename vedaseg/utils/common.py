@@ -8,13 +8,13 @@ import inspect
 import logging
 
 
-def build_from_cfg(cfg, parent, default_args=None, method='registry'):
-    if method == 'registry':
+def build_from_cfg(cfg, parent, default_args=None, src='registry'):
+    if src == 'registry':
         return obj_from_dict_registry(cfg, parent, default_args)
-    elif method == 'module':
+    elif src == 'module':
         return obj_from_dict_module(cfg, parent, default_args)
     else:
-        raise ValueError('Method %s is not supported' % method)
+        raise ValueError('Method %s is not supported' % src)
 
 
 def obj_from_dict_module(info, parent=None, default_args=None):
