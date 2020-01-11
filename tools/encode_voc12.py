@@ -1,8 +1,39 @@
-import numpy as np
-import os
 import glob
-import cv2
+import os
+
+import numpy as np
 from PIL import Image
+
+
+def get_pascal_labels():
+    """
+    Pascal VOC color <---> label
+
+    Returns:
+        (np.ndarray): color map with dimensions (21, 3),
+        contains label - color corresponds.
+    """
+    return np.asarray([[0, 0, 0],
+                       [128, 0, 0],
+                       [0, 128, 0],
+                       [128, 128, 0],
+                       [0, 0, 128],
+                       [128, 0, 128],
+                       [0, 128, 128],
+                       [128, 128, 128],
+                       [64, 0, 0],
+                       [192, 0, 0],
+                       [64, 128, 0],
+                       [192, 128, 0],
+                       [64, 0, 128],
+                       [192, 0, 128],
+                       [64, 128, 128],
+                       [192, 128, 128],
+                       [0, 64, 0],
+                       [128, 64, 0],
+                       [0, 192, 0],
+                       [128, 192, 0],
+                       [0, 64, 128]])
 
 
 def encode_mask(mask):
