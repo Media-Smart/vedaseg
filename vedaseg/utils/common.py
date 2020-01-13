@@ -4,6 +4,7 @@ import sys
 import random
 import torch
 import numpy as np
+import inspect
 import logging
 
 
@@ -13,7 +14,7 @@ def build_from_cfg(cfg, parent, default_args=None, src='registry'):
     elif src == 'module':
         return obj_from_dict_module(cfg, parent, default_args)
     else:
-        raise ValueError('Method %s is not supported' % method)
+        raise ValueError('Method %s is not supported' % src)
 
 
 def obj_from_dict_module(info, parent=None, default_args=None):
