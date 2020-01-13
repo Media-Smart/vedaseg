@@ -154,7 +154,7 @@ class Runner(object):
             else:
                 scales = [1.0]
                 flip = False
-                bias = [0.0]
+                biases = [0.0]
 
             assert len(scales) == len(biases)
 
