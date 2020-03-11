@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '../../vedaseg'))
 
-from vedaseg.assemble import assemble
+from vedaseg.assembler import assembler
 
 
 def parse_args():
@@ -20,7 +20,7 @@ def main():
     cfg_fp = args.config
     checkpoint = args.checkpoint
 
-    runner = assemble(cfg_fp, checkpoint, True)
+    runner = assembler(cfg_fp, checkpoint, True)
     runner()
 
 
