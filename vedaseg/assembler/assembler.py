@@ -16,7 +16,7 @@ from vedaseg.utils import MetricMeter
 from vedaseg.runner import build_runner
 
 
-def assembler(cfg_fp, checkpoint='', test_mode=False):
+def assemble(cfg_fp, checkpoint='', test_mode=False):
     _, fullname = os.path.split(cfg_fp)
     fname, ext = os.path.splitext(fullname)
 

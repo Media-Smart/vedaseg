@@ -1,1 +1,1 @@
-from .assembler import assembler
+from .assembler import assemble
