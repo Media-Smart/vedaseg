@@ -191,7 +191,6 @@ class Runner(object):
 
             filename = filename_tmpl.format(self.epoch)
             filepath = osp.join(out_dir, filename)
-            linkpath = osp.join(out_dir, 'latest.pth')
             optimizer = self.optim if save_optimizer else None
             logger.info('Save checkpoint %s', filename)
             save_checkpoint(self.model,
