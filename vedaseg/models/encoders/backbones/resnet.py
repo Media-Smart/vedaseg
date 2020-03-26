@@ -40,10 +40,10 @@ class BasicBlock(nn.Module):
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = norm_layer(inplanes)
-        self.relu1 = act_layer(inplanes)
+        self.bn1 = norm_layer(planes)
+        self.relu1 = act_layer(planes)
         self.conv2 = conv3x3(planes, planes)
-        self.bn2 = act_layer(planes)
+        self.bn2 = norm_layer(planes)
         self.downsample = downsample
         self.relu2 = act_layer(planes)
         self.stride = stride
