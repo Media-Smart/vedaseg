@@ -79,12 +79,10 @@ def assemble(cfg_fp, checkpoint='', test_mode=False):
     optim = build_optim(cfg['optimizer'], dict(params=model.parameters()))
 
     logger.info('Assemble, Step 6, Build LR Scheduler')
-    # 5. optim
     # 6. lr scheduler
     lr_scheduler = build_lr_scheduler(cfg['lr_scheduler'], dict(optimizer=optim, niter_per_epoch=len(train_loader)))
 
     logger.info('Assemble, Step 7, Build Runner')
-    # 5. optim
     # 7. runner
     runner = build_runner(
         cfg['runner'],
