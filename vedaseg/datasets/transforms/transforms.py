@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
+import torchvision.transforms as tt
+from PIL import Image
 
 from .registry import TRANSFORMS
 
@@ -238,6 +240,21 @@ class Normalize:
         new_mask = mask
 
         return new_image, new_mask
+
+
+@TRANSFORMS.register_module
+class ColorJitter(tt.ColorJitter):
+    def __init__(self, brightness=0, contrast=0, saturation=0, hue=0):
+        super().__init__(brightness=brightness,
+                         contrast=contrast,
+                         saturation=saturation,
+                         hue=hue)
+
+    def __call__(self, image=None, mask=None):
+        new_image = Image.fromarray(image.astype(np.uint8))
+        new_image = super().__call__(new_image)
+        new_image = np.array(new_image).astype(np.float32)
+        return new_image, mask
 
 
 @TRANSFORMS.register_module
