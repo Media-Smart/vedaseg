@@ -1,17 +1,14 @@
 import torch
-import numpy as np
-import albumentations as albu
-import albumentations.pytorch as albu_pytorch
-from torch.utils.data import Dataset
 
-from .registry import DATASETS
 from .base import BaseDataset
+from .registry import DATASETS
 
 
 @DATASETS.register_module
 class DummyDataset(BaseDataset):
     """ DummyDataset
     """
+
     def __init__(self, total=4, transform=None):
         super().__init__()
 
@@ -21,7 +18,6 @@ class DummyDataset(BaseDataset):
         self.transform = transform
 
     def __getitem__(self, idx):
-
         image, mask = self.process(self.a, self.b)
 
         return image, mask.transpose(0, 2)

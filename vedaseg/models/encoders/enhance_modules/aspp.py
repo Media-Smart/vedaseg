@@ -1,22 +1,23 @@
 # modify from https://github.com/pytorch/vision/tree/master/torchvision/models/segmentation/deeplabv3.py
 
+import logging
+from functools import partial
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import logging
 
 from .registry import ENHANCE_MODULES
-from ...weight_init import init_weights
-from ...utils.norm import build_norm_layer
 from ...utils.act import build_act_layer
-
-from functools import partial
+from ...utils.norm import build_norm_layer
+from ...weight_init import init_weights
 
 logger = logging.getLogger()
 
 
 class ASPPConv(nn.Sequential):
-    def __init__(self, in_channels, out_channels, dilation, norm_layer, act_layer):
+    def __init__(self, in_channels, out_channels, dilation, norm_layer,
+                 act_layer):
         modules = [
             nn.Conv2d(in_channels,
                       out_channels,
@@ -31,22 +32,28 @@ class ASPPConv(nn.Sequential):
 
 
 class ASPPPooling(nn.Sequential):
-    def __init__(self, in_channels, out_channels, norm_layer, act_layer):
+    def __init__(self, in_channels, out_channels, norm_layer, act_layer,
+                 mode='bilinear', align_corners=True):
         super(ASPPPooling, self).__init__(
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(in_channels, out_channels, 1, bias=False),
             norm_layer(out_channels), act_layer(out_channels))
+        self.mode = mode
+        self.align_corners = align_corners
 
     def forward(self, x):
-        size = x.shape[-2:]
-        x = super(ASPPPooling, self).forward(x)
-        return F.interpolate(x, size=size, mode='bilinear', align_corners=True)
+        y = super(ASPPPooling, self).forward(x)
+        return F.interpolate(y,
+                             size=(int(x.size(2)), int(x.size(3))),
+                             mode=self.mode,
+                             align_corners=self.align_corners)
 
 
 @ENHANCE_MODULES.register_module
 class ASPP(nn.Module):
     def __init__(self, in_channels, out_channels, atrous_rates, from_layer,
-                 to_layer, dropout=None, norm_cfg=None, act_cfg=None):
+                 to_layer, mode='bilinear', align_corners=True, dropout=None,
+                 norm_cfg=None, act_cfg=None):
         super(ASPP, self).__init__()
         self.from_layer = from_layer
         self.to_layer = to_layer
@@ -59,16 +66,23 @@ class ASPP(nn.Module):
             act_cfg = dict(type='Relu', inplace=True)
         act_layer = partial(build_act_layer, act_cfg, layer_only=True)
 
-        modules = []
-        modules.append(
-            nn.Sequential(nn.Conv2d(in_channels, out_channels, 1, bias=False),
-                          norm_layer(out_channels), act_layer(out_channels)))
+        modules = [nn.Sequential(nn.Conv2d(in_channels,
+                                           out_channels,
+                                           1,
+                                           bias=False),
+                                 norm_layer(out_channels),
+                                 act_layer(out_channels))]
 
         rate1, rate2, rate3 = tuple(atrous_rates)
-        modules.append(ASPPConv(in_channels, out_channels, rate1, norm_layer, act_layer))
-        modules.append(ASPPConv(in_channels, out_channels, rate2, norm_layer, act_layer))
-        modules.append(ASPPConv(in_channels, out_channels, rate3, norm_layer, act_layer))
-        modules.append(ASPPPooling(in_channels, out_channels, norm_layer, act_layer))
+        modules.append(
+            ASPPConv(in_channels, out_channels, rate1, norm_layer, act_layer))
+        modules.append(
+            ASPPConv(in_channels, out_channels, rate2, norm_layer, act_layer))
+        modules.append(
+            ASPPConv(in_channels, out_channels, rate3, norm_layer, act_layer))
+        modules.append(
+            ASPPPooling(in_channels, out_channels, norm_layer, act_layer,
+                        mode=mode, align_corners=align_corners))
 
         self.convs = nn.ModuleList(modules)
 

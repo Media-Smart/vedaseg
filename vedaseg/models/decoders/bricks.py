@@ -1,11 +1,11 @@
-import torch.nn as nn
-import torch
-import torch.nn.functional as F
-import math
 import copy
+import math
 
-from ..utils import build_module, build_torch_nn, ConvModules, ConvModule
+import torch
+import torch.nn as nn
+
 from .registry import BRICKS
+from ..utils import ConvModule, build_module
 
 
 @BRICKS.register_module
@@ -14,6 +14,7 @@ class JunctionBlock(nn.Module):
 
     Args:
     """
+
     def __init__(self, top_down, lateral, post, to_layer, fusion_method=None):
         super().__init__()
         self.from_layer = {}
@@ -80,6 +81,7 @@ class FusionBlock(nn.Module):
 
         Args:
     """
+
     def __init__(self,
                  method,
                  from_layers,
@@ -105,7 +107,8 @@ class FusionBlock(nn.Module):
             out_channels = out_channels_list[idx]
             from_layer = from_layers[idx]
             feat_stride = feat_strides[idx]
-            ups_num = int(max(1, math.log2(feat_stride) - math.log2(common_stride)))
+            ups_num = int(
+                max(1, math.log2(feat_stride) - math.log2(common_stride)))
             head_ops = []
             for idx2 in range(ups_num):
                 cur_in_channels = in_channels if idx2 == 0 else out_channels
@@ -143,6 +146,7 @@ class CollectBlock(nn.Module):
 
         Args:
     """
+
     def __init__(self, from_layer, to_layer=None):
         super().__init__()
         self.from_layer = from_layer
@@ -152,4 +156,4 @@ class CollectBlock(nn.Module):
         if self.to_layer is None:
             return feats[self.from_layer]
         else:
-            res[self.to_layer] = feats[self.from_layer]
+            feats[self.to_layer] = feats[self.from_layer]

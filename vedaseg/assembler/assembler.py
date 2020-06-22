@@ -4,16 +4,16 @@ import torch
 from torch import nn
 
 from vedaseg import utils
-from vedaseg.loggers import build_logger
+from vedaseg.criteria import build_criterion
+from vedaseg.dataloaders import build_dataloader
 from vedaseg.datasets import build_dataset
 from vedaseg.datasets.transforms.builder import build_transform
-from vedaseg.dataloaders import build_dataloader
-from vedaseg.models import build_model
-from vedaseg.criteria import build_criterion
-from vedaseg.optims import build_optim
+from vedaseg.loggers import build_logger
 from vedaseg.lr_schedulers import build_lr_scheduler
-from vedaseg.utils import MetricMeter
+from vedaseg.models import build_model
+from vedaseg.optims import build_optim
 from vedaseg.runner import build_runner
+from vedaseg.utils import MetricMeter
 
 
 def assemble(cfg_fp, checkpoint='', test_mode=False):
@@ -43,18 +43,22 @@ def assemble(cfg_fp, checkpoint='', test_mode=False):
     # 2. data
     ## 2.1 dataset
     train_tf = build_transform(cfg['data']['train']['transforms'])
-    train_dataset = build_dataset(cfg['data']['train']['dataset'], dict(transform=train_tf))
+    train_dataset = build_dataset(cfg['data']['train']['dataset'],
+                                  dict(transform=train_tf))
 
     if cfg['data'].get('val'):
         val_tf = build_transform(cfg['data']['val']['transforms'])
-        val_dataset = build_dataset(cfg['data']['val']['dataset'], dict(transform=val_tf))
+        val_dataset = build_dataset(cfg['data']['val']['dataset'],
+                                    dict(transform=val_tf))
 
     logger.info('Assemble, Step 2, Build Dataloader')
     # 2.2 dataloader
-    train_loader = build_dataloader(cfg['data']['train']['loader'], dict(dataset=train_dataset))
+    train_loader = build_dataloader(cfg['data']['train']['loader'],
+                                    dict(dataset=train_dataset))
     loader = {'train': train_loader}
     if cfg['data'].get('val'):
-        val_loader = build_dataloader(cfg['data']['val']['loader'], dict(dataset=val_dataset))
+        val_loader = build_dataloader(cfg['data']['val']['loader'],
+                                      dict(dataset=val_dataset))
         loader['val'] = val_loader
 
     logger.info('Assemble, Step 3, Build Model')
@@ -80,7 +84,9 @@ def assemble(cfg_fp, checkpoint='', test_mode=False):
 
     logger.info('Assemble, Step 6, Build LR Scheduler')
     # 6. lr scheduler
-    lr_scheduler = build_lr_scheduler(cfg['lr_scheduler'], dict(optimizer=optim, niter_per_epoch=len(train_loader)))
+    lr_scheduler = build_lr_scheduler(cfg['lr_scheduler'],
+                                      dict(optimizer=optim,
+                                           niter_per_epoch=len(train_loader)))
 
     logger.info('Assemble, Step 7, Build Runner')
     # 7. runner
@@ -101,7 +107,10 @@ def assemble(cfg_fp, checkpoint='', test_mode=False):
     )
 
     if test_mode:
-        cfg['resume'] = dict(checkpoint=checkpoint, resume_optimizer=False, resume_lr=False, resume_epoch=False)
+        cfg['resume'] = dict(checkpoint=checkpoint,
+                             resume_optimizer=False,
+                             resume_lr=False,
+                             resume_epoch=False)
 
     if cfg['resume']:
         runner.resume(**cfg['resume'])
