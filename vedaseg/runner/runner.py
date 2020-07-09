@@ -1,12 +1,12 @@
-import torch
 import logging
 import os.path as osp
-import torch.nn.functional as F
-import numpy as np
 from collections.abc import Iterable
 
-from vedaseg.utils.checkpoint import load_checkpoint, save_checkpoint
+import numpy as np
+import torch
+import torch.nn.functional as F
 
+from vedaseg.utils.checkpoint import load_checkpoint, save_checkpoint
 from .registry import RUNNERS
 
 np.set_printoptions(precision=4)
@@ -19,6 +19,7 @@ class Runner(object):
     """ Runner
 
     """
+
     def __init__(self,
                  loader,
                  model,
@@ -101,21 +102,6 @@ class Runner(object):
         self.optim.step()
 
         with torch.no_grad():
-            
-            '''
-            import matplotlib.pyplot as plt
-            pred = (prob[0]).permute(1, 2, 0).float().cpu().numpy()[:, :, 0]
-            im = img[0].permute(1, 2, 0).clamp(min=0, max=1).cpu().numpy()
-            label_ = label[0].permute(1, 2, 0).clamp(min=0, max=1).cpu().numpy()[:, :, 0]
-            import random
-            random_num = random.randint(0, 1000)
-            pred_name = 'output/%d_pred.jpg' % random_num
-            plt.imsave(pred_name, pred, cmap='Greys')
-            im_name = 'output/%d.jpg' % random_num
-            plt.imsave(im_name, im, cmap='Greys')
-            label_name = 'output/%d_gt.jpg' % random_num
-            plt.imsave(label_name, label_, cmap='Greys')
-            '''
             _, pred_label = torch.max(pred, dim=1)
             self.metric.add(pred_label.cpu().numpy(), label.cpu().numpy())
             miou, ious = self.metric.miou()
@@ -161,8 +147,9 @@ class Runner(object):
             n, c, h, w = img.size()
             probs = []
             for scale, bias in zip(scales, biases):
-                new_h, new_w = int(h*scale + bias), int(w*scale+bias)
-                new_img = F.interpolate(img, size=(new_h, new_w), mode='bilinear', align_corners=True)
+                new_h, new_w = int(h * scale + bias), int(w * scale + bias)
+                new_img = F.interpolate(img, size=(new_h, new_w),
+                                        mode='bilinear', align_corners=True)
                 prob = self.model(new_img).softmax(dim=1)
                 probs.append(prob)
 
@@ -246,9 +233,11 @@ class Runner(object):
             device_id = torch.cuda.current_device()
             checkpoint = self.load_checkpoint(
                 checkpoint,
-                map_location=lambda storage, loc: storage.cuda(device_id))
+                map_location=lambda storage, loc: storage.cuda(
+                    device_id))  # noqa
         else:
-            checkpoint = self.load_checkpoint(checkpoint, map_location=map_location)
+            checkpoint = self.load_checkpoint(checkpoint,
+                                              map_location=map_location)
         if 'optimizer' in checkpoint and resume_optimizer:
             self.optim.load_state_dict(checkpoint['optimizer'])
         if resume_epoch:

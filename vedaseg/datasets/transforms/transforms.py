@@ -102,7 +102,9 @@ class RandomScale(FactorScale):
         return scale_factor
 
     def __call__(self, image, mask):
-        self.scale_factor = self.get_scale_factor(self.min_scale, self.max_scale, self.scale_step)
+        self.scale_factor = self.get_scale_factor(self.min_scale,
+                                                  self.max_scale,
+                                                  self.scale_step)
         return self.rescale(image, mask)
 
 
@@ -120,8 +122,10 @@ class RandomCrop:
         target_height = h + max(self.height - h, 0)
         target_width = w + max(self.width - w, 0)
 
-        image_pad_value = np.reshape(np.array(self.image_value, dtype=image.dtype), [1, 1, self.channel])
-        mask_pad_value = np.reshape(np.array(self.mask_value, dtype=mask.dtype), [1, 1])
+        image_pad_value = np.reshape(
+            np.array(self.image_value, dtype=image.dtype), [1, 1, self.channel])
+        mask_pad_value = np.reshape(np.array(self.mask_value, dtype=mask.dtype),
+                                    [1, 1])
 
         new_image = np.tile(image_pad_value, (target_height, target_width, 1))
         new_mask = np.tile(mask_pad_value, (target_height, target_width))
@@ -129,7 +133,8 @@ class RandomCrop:
         new_image[:h, :w, :] = image
         new_mask[:h, :w] = mask
 
-        assert np.count_nonzero(mask != self.mask_value) == np.count_nonzero(new_mask != self.mask_value)
+        assert np.count_nonzero(mask != self.mask_value) == np.count_nonzero(
+            new_mask != self.mask_value)
 
         y1 = int(random.uniform(0, target_height - self.height + 1))
         y2 = y1 + self.height
@@ -159,8 +164,10 @@ class PadIfNeeded:
         target_height = h + max(self.height - h, 0)
         target_width = w + max(self.width - w, 0)
 
-        image_pad_value = np.reshape(np.array(self.image_value, dtype=image.dtype), [1, 1, self.channel])
-        mask_pad_value = np.reshape(np.array(self.mask_value, dtype=mask.dtype), [1, 1])
+        image_pad_value = np.reshape(
+            np.array(self.image_value, dtype=image.dtype), [1, 1, self.channel])
+        mask_pad_value = np.reshape(np.array(self.mask_value, dtype=mask.dtype),
+                                    [1, 1])
 
         new_image = np.tile(image_pad_value, (target_height, target_width, 1))
         new_mask = np.tile(mask_pad_value, (target_height, target_width))
@@ -168,7 +175,8 @@ class PadIfNeeded:
         new_image[:h, :w, :] = image
         new_mask[:h, :w] = mask
 
-        assert np.count_nonzero(mask != self.mask_value) == np.count_nonzero(new_mask != self.mask_value)
+        assert np.count_nonzero(mask != self.mask_value) == np.count_nonzero(
+            new_mask != self.mask_value)
 
         return new_image, new_mask
 
@@ -188,9 +196,11 @@ class HorizontalFlip:
 
 @TRANSFORMS.register_module
 class RandomRotate:
-    def __init__(self, p=0.5, degrees=30, mode='bilinear', border_mode='reflect101', image_value=None, mask_value=None):
+    def __init__(self, p=0.5, degrees=30, mode='bilinear',
+                 border_mode='reflect101', image_value=None, mask_value=None):
         self.p = p
-        self.degrees = (-degrees, degrees) if isinstance(degrees, (int, float)) else degrees
+        self.degrees = (-degrees, degrees) if isinstance(degrees, (
+            int, float)) else degrees
         self.mode = CV2_MODE[mode]
         self.border_mode = CV2_BORDER_MODE[border_mode]
         self.image_value = image_value
@@ -203,9 +213,12 @@ class RandomRotate:
             angle = random.uniform(*self.degrees)
             matrix = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1.0)
 
-            image = cv2.warpAffine(image, M=matrix, dsize=(w, h), flags=self.mode, borderMode=self.border_mode,
+            image = cv2.warpAffine(image, M=matrix, dsize=(w, h),
+                                   flags=self.mode, borderMode=self.border_mode,
                                    borderValue=self.image_value)
-            mask = cv2.warpAffine(mask, M=matrix, dsize=(w, h), flags=cv2.INTER_NEAREST, borderMode=self.border_mode,
+            mask = cv2.warpAffine(mask, M=matrix, dsize=(w, h),
+                                  flags=cv2.INTER_NEAREST,
+                                  borderMode=self.border_mode,
                                   borderValue=self.mask_value)
 
         return image, mask
@@ -226,14 +239,17 @@ class GaussianBlur:
 
 @TRANSFORMS.register_module
 class Normalize:
-    def __init__(self, mean=(123.675, 116.280, 103.530), std=(58.395, 57.120, 57.375)):
+    def __init__(self, mean=(123.675, 116.280, 103.530),
+                 std=(58.395, 57.120, 57.375)):
         self.mean = mean
         self.std = std
         self.channel = len(mean)
 
     def __call__(self, image, mask):
-        mean = np.reshape(np.array(self.mean, dtype=image.dtype), [1, 1, self.channel])
-        std = np.reshape(np.array(self.std, dtype=image.dtype), [1, 1, self.channel])
+        mean = np.reshape(np.array(self.mean, dtype=image.dtype),
+                          [1, 1, self.channel])
+        std = np.reshape(np.array(self.std, dtype=image.dtype),
+                         [1, 1, self.channel])
         denominator = np.reciprocal(std, dtype=image.dtype)
 
         new_image = (image - mean) * denominator

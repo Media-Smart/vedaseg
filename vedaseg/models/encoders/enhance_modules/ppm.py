@@ -1,21 +1,23 @@
 # modify from https://github.com/hszhao/semseg/blob/master/model/pspnet.py
 
+import logging
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import logging
 
-from ...weight_init import init_weights
 from .registry import ENHANCE_MODULES
-from ...utils.norm import build_norm_layer
 from ...utils.act import build_act_layer
+from ...utils.norm import build_norm_layer
+from ...weight_init import init_weights
 
 logger = logging.getLogger()
 
 
 @ENHANCE_MODULES.register_module
 class PPM(nn.Module):
-    def __init__(self, in_channels, out_channels, bins, from_layer, to_layer, norm_cfg=None, act_cfg=None):
+    def __init__(self, in_channels, out_channels, bins, from_layer, to_layer,
+                 norm_cfg=None, act_cfg=None):
         super(PPM, self).__init__()
         self.from_layer = from_layer
         self.to_layer = to_layer

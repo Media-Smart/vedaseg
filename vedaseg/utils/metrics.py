@@ -28,9 +28,10 @@ def dice_score(pred, gt, thres_range=np.arange(0.1, 1.0, 0.1)):
 class MetricMeter(object):
     """MetricMeter
     """
+
     def __init__(self, nclasses):
         self.nclasses = nclasses
-        self.confusion_matrix = np.zeros((self.nclasses,)*2)
+        self.confusion_matrix = np.zeros((self.nclasses,) * 2)
 
     def pixel_accuracy(self):
         acc = np.diag(self.confusion_matrix).sum() / self.confusion_matrix.sum()
@@ -43,18 +44,21 @@ class MetricMeter(object):
 
     def miou(self):
         IoUs = np.diag(self.confusion_matrix) / (
-                    np.sum(self.confusion_matrix, axis=1) + np.sum(self.confusion_matrix, axis=0) -
-                    np.diag(self.confusion_matrix) + np.finfo(np.float32).eps)
+                np.sum(self.confusion_matrix, axis=1) + np.sum(
+            self.confusion_matrix, axis=0) -
+                np.diag(self.confusion_matrix) + np.finfo(np.float32).eps)
         mIoU = np.nanmean(IoUs)
         return mIoU, IoUs
 
     def fw_iou(self):
         """fw_iou, frequency weighted iou
         """
-        freq = np.sum(self.confusion_matrix, axis=1) / np.sum(self.confusion_matrix)
+        freq = np.sum(self.confusion_matrix, axis=1) / np.sum(
+            self.confusion_matrix)
         IoU = np.diag(self.confusion_matrix) / (
-                    np.sum(self.confusion_matrix, axis=1) + np.sum(self.confusion_matrix, axis=0) -
-                    np.diag(self.confusion_matrix))
+                np.sum(self.confusion_matrix, axis=1) + np.sum(
+            self.confusion_matrix, axis=0) -
+                np.diag(self.confusion_matrix))
 
         fwIoU = (freq[freq > 0] * IoU[freq > 0]).sum()
         return fwIoU
@@ -62,7 +66,7 @@ class MetricMeter(object):
     def _generate_matrix(self, pred, gt):
         mask = (gt >= 0) & (gt < self.nclasses)
         label = self.nclasses * gt[mask].astype('int') + pred[mask]
-        count = np.bincount(label, minlength=self.nclasses**2)
+        count = np.bincount(label, minlength=self.nclasses ** 2)
         confusion_matrix = count.reshape(self.nclasses, self.nclasses)
         return confusion_matrix
 

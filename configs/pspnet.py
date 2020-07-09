@@ -18,7 +18,8 @@ test_cfg = dict(
     bias=[0.5, 0.25, 0.0, -0.25, -0.5, -0.75],
     flip=True,
 )
-img_norm_cfg = dict(mean=(123.675, 116.280, 103.530), std=(58.395, 57.120, 57.375))
+img_norm_cfg = dict(mean=(123.675, 116.280, 103.530),
+                    std=(58.395, 57.120, 57.375))
 ignore_label = 255
 
 dataset_type = 'VOCDataset'
@@ -31,9 +32,13 @@ data = dict(
             imglist_name='trainaug.txt',
         ),
         transforms=[
-            dict(type='RandomScale', min_scale=0.5, max_scale=2.0, mode='bilinear'),
-            dict(type='RandomCrop', height=513, width=513, image_value=img_norm_cfg['mean'], mask_value=ignore_label),
-            dict(type='RandomRotate', p=0.5, degrees=10, mode='bilinear', border_mode='constant', image_value=img_norm_cfg['mean'], mask_value=ignore_label),
+            dict(type='RandomScale', min_scale=0.5, max_scale=2.0,
+                 mode='bilinear'),
+            dict(type='RandomCrop', height=513, width=513,
+                 image_value=img_norm_cfg['mean'], mask_value=ignore_label),
+            dict(type='RandomRotate', p=0.5, degrees=10, mode='bilinear',
+                 border_mode='constant', image_value=img_norm_cfg['mean'],
+                 mask_value=ignore_label),
             dict(type='GaussianBlur', p=0.5, ksize=7),
             dict(type='HorizontalFlip', p=0.5),
             dict(type='Normalize', **img_norm_cfg),
@@ -54,7 +59,8 @@ data = dict(
             imglist_name='val.txt',
         ),
         transforms=[
-            dict(type='PadIfNeeded', height=513, width=513, image_value=img_norm_cfg['mean'], mask_value=ignore_label),
+            dict(type='PadIfNeeded', height=513, width=513,
+                 image_value=img_norm_cfg['mean'], mask_value=ignore_label),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='ToTensor'),
         ],
@@ -98,7 +104,7 @@ model = dict(
         dropouts=[0.1],
         upsample=dict(
             type='Upsample',
-            size=(513,513),
+            size=(513, 513),
             mode='bilinear',
             align_corners=True
         ),
