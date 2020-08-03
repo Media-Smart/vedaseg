@@ -1,9 +1,10 @@
-import torch.nn as nn
 import logging
 
-from ...weight_init import init_weights
+import torch.nn as nn
+
 from ..builder import build_brick, build_bricks
 from ..registry import DECODERS
+from ...weight_init import init_weights
 
 logger = logging.getLogger()
 
@@ -14,6 +15,7 @@ class GFPN(nn.Module):
 
     Args:
     """
+
     def __init__(self, neck, fusion=None):
         super().__init__()
         self.neck = build_bricks(neck)

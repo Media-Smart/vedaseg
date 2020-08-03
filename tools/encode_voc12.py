@@ -6,7 +6,7 @@ from PIL import Image
 
 
 def main():
-    root = 'VOCdevkit/VOC2012'
+    root = 'workpiece/VOC2012'
     src_name = 'SegmentationClass'
     dst_name = 'EncodeSegmentationClassPart'
     src_dir = '%s/%s' % (root, src_name)
