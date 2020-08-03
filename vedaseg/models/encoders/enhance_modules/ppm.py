@@ -17,10 +17,13 @@ logger = logging.getLogger()
 @ENHANCE_MODULES.register_module
 class PPM(nn.Module):
     def __init__(self, in_channels, out_channels, bins, from_layer, to_layer,
+                 mode='bilinear', align_corners=True,
                  norm_cfg=None, act_cfg=None):
         super(PPM, self).__init__()
         self.from_layer = from_layer
         self.to_layer = to_layer
+        self.mode = mode
+        self.align_corners = align_corners
 
         if norm_cfg is None:
             norm_cfg = dict(type='BN')
@@ -50,8 +53,8 @@ class PPM(nn.Module):
             feat = F.interpolate(
                 block(x),
                 (h, w),
-                mode='bilinear',
-                align_corners=True
+                mode=self.mode,
+                align_corners=self.align_corners
             )
             out.append(feat)
         out = torch.cat(out, 1)

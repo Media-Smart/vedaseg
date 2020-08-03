@@ -1,12 +1,14 @@
 import torch.nn as nn
 
+
+# from .decoders import build_brick
 from vedaseg.models.decoders import build_brick
 from vedaseg.models.decoders import build_decoder
 from vedaseg.models.encoders import build_encoder
 from vedaseg.models.heads import build_head
 
 
-def build_model(cfg, default_args=None):
+def build_model(cfg):
     encoder = build_encoder(cfg.get('encoder'))
 
     if cfg.get('decoder'):

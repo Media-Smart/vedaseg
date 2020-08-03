@@ -1,8 +1,8 @@
-import torch.utils.data as torch_data
+from .registry import DATALOADERS
+from ..utils import build_from_cfg
 
-from vedaseg.utils import build_from_cfg
 
+def build_dataloader(cfg, default_args=None):
+    dataloader = build_from_cfg(cfg, DATALOADERS, default_args)
 
-def build_dataloader(cfg, default_args):
-    loader = build_from_cfg(cfg, torch_data, default_args, 'module')
-    return loader
+    return dataloader
