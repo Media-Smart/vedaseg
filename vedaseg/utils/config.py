@@ -1,14 +1,18 @@
-# modify from mmcv and mmdetection
-
-import os.path as osp
 import sys
+import os.path as osp
 from argparse import ArgumentParser
 from importlib import import_module
 
 from addict import Dict
 
-from .misc import collections_abc
-from .path import check_file_exist
+import collections
+
+if sys.version_info < (3, 3):
+    Sequence = collections.Sequence
+    Iterable = collections.Iterable
+else:
+    Sequence = collections.abc.Sequence
+    Iterable = collections.abc.Iterable
 
 
 class ConfigDict(Dict):
@@ -40,20 +44,23 @@ def add_args(parser, cfg, prefix=''):
             parser.add_argument('--' + prefix + k, action='store_true')
         elif isinstance(v, dict):
             add_args(parser, v, k + '.')
-        elif isinstance(v, collections_abc.Iterable):
+        elif isinstance(v, Iterable):
             parser.add_argument('--' + prefix + k, type=type(v[0]), nargs='+')
         else:
             print('connot parse key {} of type {}'.format(prefix + k, type(v)))
     return parser
 
 
+def check_file_exist(filename, msg_tmpl='file "{}" does not exist'):
+    if not osp.isfile(filename):
+        raise FileNotFoundError(msg_tmpl.format(filename))
+
+
 class Config(object):
     """A facility for config and config files.
-
     It supports common file formats as configs: python/json/yaml. The interface
     is the same as a dict object and also allows access config values as
     attributes.
-
     Example:
         >>> cfg = Config(dict(a=1, b=dict(b1=[0, 1])))
         >>> cfg.a
@@ -70,7 +77,6 @@ class Config(object):
         >>> cfg
         "Config [path: /home/kchen/projects/mmcv/tests/data/config/a.py]: "
         "{'item1': [1, 2], 'item2': {'a': 0}, 'item3': True, 'item4': 'test'}"
-
     """
     @staticmethod
     def fromfile(filename):
@@ -89,9 +95,6 @@ class Config(object):
                 for name, value in mod.__dict__.items()
                 if not name.startswith('__')
             }
-        #elif filename.endswith(('.yml', '.yaml', '.json')):
-        #    import mmcv
-        #    cfg_dict = mmcv.load(filename)
         else:
             raise IOError('Only py type are supported now!')
         return Config(cfg_dict, filename=filename)

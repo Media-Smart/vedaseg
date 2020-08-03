@@ -10,7 +10,8 @@ class TLU(nn.Module):
         super(TLU, self).__init__()
 
         self.num_features = num_features
-        self.tau = Parameter(torch.Tensor(1,num_features,1,1), requires_grad=True)
+        self.tau = Parameter(torch.Tensor(1, num_features, 1, 1),
+                             requires_grad=True)
 
         self.reset_parameters()
 

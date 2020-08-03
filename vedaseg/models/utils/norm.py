@@ -10,8 +10,10 @@ class FRN(nn.Module):
         super(FRN, self).__init__()
 
         self.num_features = num_features
-        self.gamma = Parameter(torch.Tensor(1,num_features,1,1), requires_grad=True)
-        self.beta = Parameter(torch.Tensor(1,num_features,1,1), requires_grad=True)
+        self.gamma = Parameter(torch.Tensor(1, num_features, 1, 1),
+                               requires_grad=True)
+        self.beta = Parameter(torch.Tensor(1, num_features, 1, 1),
+                              requires_grad=True)
 
         self.register_buffer('eps', torch.Tensor([eps]))
 
@@ -22,7 +24,7 @@ class FRN(nn.Module):
         nn.init.zeros_(self.beta)
 
     def forward(self, x):
-        nu2 = torch.mean(x.pow(2), dim=[2,3], keepdim=True)
+        nu2 = torch.mean(x.pow(2), dim=[2, 3], keepdim=True)
         x = x * torch.rsqrt(nu2 + self.eps.abs())
         x = self.gamma * x + self.beta
 
@@ -76,7 +78,7 @@ def build_norm_layer(cfg, num_features, postfix='', layer_only=False):
     if layer_type != 'GN':
         layer = norm_layer(num_features, **cfg_)
         if layer_type == 'SyncBN':
-            layer._specify_ddp_gpu_num(1)
+            layer._specify_ddp_gpu_num(1)  # noqa
     else:
         assert 'num_groups' in cfg_
         layer = norm_layer(num_channels=num_features, **cfg_)

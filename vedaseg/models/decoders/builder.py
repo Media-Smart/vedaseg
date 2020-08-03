@@ -1,7 +1,6 @@
 import torch.nn as nn
 
 from vedaseg.utils import build_from_cfg
-
 from .registry import BRICKS
 from .registry import DECODERS
 
