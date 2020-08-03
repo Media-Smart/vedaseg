@@ -4,16 +4,15 @@ import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../'))
 
-from vedaseg.runner import TestRunner
+from vedaseg.runner import TrainRunner
 from vedaseg.utils import Config
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Test a semantic segmentatation model')
+    parser = argparse.ArgumentParser(description='Train a segmentation model')
     parser.add_argument('config', type=str, help='config file path')
-    parser.add_argument('checkpoint', type=str, help='checkpoint file path')
     args = parser.parse_args()
+
     return args
 
 
@@ -30,13 +29,12 @@ def main():
     workdir = os.path.join(root_workdir, fname)
     os.makedirs(workdir, exist_ok=True)
 
-    test_cfg = cfg['test']
+    train_cfg = cfg['train']
     inference_cfg = cfg['inference']
     common_cfg = cfg['common']
     common_cfg['workdir'] = workdir
 
-    runner = TestRunner(test_cfg, inference_cfg, common_cfg)
-    runner.load_checkpoint(args.checkpoint)
+    runner = TrainRunner(train_cfg, inference_cfg, common_cfg)
     runner()
 
 

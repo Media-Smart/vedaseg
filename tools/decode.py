@@ -31,7 +31,7 @@ def color_map(N=256, normalized=False):
 
 
 def main():
-    root = 'VOCdevkit/VOC2012'
+    root = 'workpiece/VOC2012'
     src_name = 'EncodeSegmentationClass'
     dst_name = 'DecodeSegmentationClass'
     src_dir = '%s/%s' % (root, src_name)

@@ -1,3 +1,3 @@
 from ..utils import Registry
 
-MODELS = Registry('model')
+METRICS = Registry('metric')

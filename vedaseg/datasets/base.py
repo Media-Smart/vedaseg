@@ -4,12 +4,16 @@ from torch.utils.data import Dataset
 class BaseDataset(Dataset):
     """ BaseDataset
     """
+    CLASSES = None
 
-    def __init__(self):
-        self.transform = None
+    PALETTE = None
 
-    def process(self, image, mask):
+    def __init__(self, transform=None):
+        self.transform = transform
+
+    def process(self, image, masks):
         if self.transform:
-            image, mask = self.transform(image, mask)
-
-        return image, mask
+            augmented = self.transform(image=image, masks=masks)
+            return augmented['image'], augmented['masks']
+        else:
+            return image, masks

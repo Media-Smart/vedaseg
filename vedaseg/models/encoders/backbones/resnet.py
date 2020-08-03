@@ -210,7 +210,6 @@ class ResNetCls(nn.Module):
         norm_layer = self._norm_layer
         act_layer = self._act_layer
         downsample = None
-        previous_dilation = self.dilation
 
         if multi_grid is None:
             multi_grid = [1 for _ in range(blocks)]
@@ -220,6 +219,9 @@ class ResNetCls(nn.Module):
         if dilate:
             self.dilation *= stride
             stride = 1
+
+        previous_dilation = self.dilation
+
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
