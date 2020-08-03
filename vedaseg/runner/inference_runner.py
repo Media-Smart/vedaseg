@@ -65,8 +65,8 @@ class InferenceRunner(Common):
             if self.use_gpu:
                 image = image.cuda()
 
-                output = self.model(image)
-                output = self._compute(output)
+            output = self.model(image)
+            output = self._compute(output)
 
             output = output.squeeze().cpu().numpy()
 
