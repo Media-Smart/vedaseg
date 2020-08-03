@@ -1,7 +1,8 @@
-import torch.optim as torch_optim
-from vedaseg.utils import build_from_cfg
+import torch.optim as optims
+
+from ..utils import build_from_cfg
 
 
-def build_optim(cfg, default_args=None):
-    optim = build_from_cfg(cfg, torch_optim, default_args, 'module')
-    return optim
+def build_optimizer(cfg_optimizer, default_args=None):
+    optimizer = build_from_cfg(cfg_optimizer, optims, default_args, 'module')
+    return optimizer

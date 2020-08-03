@@ -4,8 +4,8 @@ import warnings
 
 import torch.nn as nn
 
-from .norm import build_norm_layer
 from .act import build_act_layer
+from .norm import build_norm_layer
 from .registry import UTILS
 
 conv_cfg = {
@@ -61,6 +61,7 @@ class ConvModule(nn.Module):
             sequence of "conv", "norm" and "act". Examples are
             ("conv", "norm", "act") and ("act", "conv", "norm").
     """
+
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -167,6 +168,7 @@ class ConvModules(nn.Module):
 
     Args:
     """
+
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -202,7 +204,8 @@ class ConvModules(nn.Module):
                 dropout = None
             layers.append(
                 ConvModule(out_channels, out_channels, kernel_size, stride,
-                           padding, dilation, groups, bias, conv_cfg, norm_cfg, act_cfg,
+                           padding, dilation, groups, bias, conv_cfg, norm_cfg,
+                           act_cfg,
                            order, dropout))
 
         self.block = nn.Sequential(*layers)

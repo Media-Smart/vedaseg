@@ -1,7 +1,7 @@
 import logging
-import time
-import sys
 import os
+import sys
+import time
 
 
 def build_logger(cfg, default_args):
@@ -16,8 +16,11 @@ def build_logger(cfg, default_args):
         if handler['type'] == 'StreamHandler':
             instance = logging.StreamHandler(sys.stdout)
         elif handler['type'] == 'FileHandler':
-            fp = os.path.join(default_args['workdir'], '%s.log' % timestamp)
-            instance = logging.FileHandler(fp, 'w')
+            if default_args.get('workdir'):
+                fp = os.path.join(default_args['workdir'], '%s.log' % timestamp)
+                instance = logging.FileHandler(fp, 'w')
+            else:
+                continue
         else:
             instance = logging.StreamHandler(sys.stdout)
 

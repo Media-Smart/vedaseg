@@ -1,8 +1,9 @@
 import glob
 import os
+
+import numpy as np
 import scipy.io as io
 from PIL import Image
-import numpy as np
 
 
 def main():
