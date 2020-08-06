@@ -39,11 +39,10 @@ class ConfusionMatrix(BaseMetric):
         self.cfsmtx = np.zeros((self.num_classes,) * 2)
 
     def compute(self, pred, target):
-        pred_index = np.argmax(pred, axis=1)
         mask = (target >= 0) & (target < self.num_classes)
 
         self.current_state = np.bincount(
-            self.num_classes * target[mask].astype('int') + pred_index[mask],
+            self.num_classes * target[mask].astype('int') + pred[mask],
             minlength=self.num_classes ** 2
         ).reshape(self.num_classes, self.num_classes)
         return self.current_state
@@ -65,8 +64,7 @@ class MultiLabelConfusionMatrix(BaseMetric):
         num_classes (int): number of classes.
     """
 
-    def __init__(self, num_classes, threshold):
-        self.threshold = threshold
+    def __init__(self, num_classes):
         self.num_classes = num_classes
         self.binary = 2
         self.current_state = np.zeros(
@@ -75,31 +73,21 @@ class MultiLabelConfusionMatrix(BaseMetric):
 
     @staticmethod
     def _check_match(pred, target):
-        assert isinstance(pred, list) or pred.shape == target.shape, \
-            "pred should be list or habe same shape with target"
+        assert pred.shape == target.shape, \
+            "pred should habe same shape with target"
 
     def reset(self):
         self.cfsmtx = np.zeros((self.num_classes, self.binary, self.binary))
 
     def compute(self, pred, target):
-        if isinstance(pred, list):
-            pred = np.stack(pred, axis=0)
-            pred = 1 / (1 + np.exp(-pred))
-            pred = np.mean(pred, axis=0)
-        else:
-            pred = 1 / (1 + np.exp(-pred))
-
-        pred_index = np.where(pred >= self.threshold, 1, 0)
-
         mask = (target >= 0) & (target < self.binary)
         for i in range(self.num_classes):
-            pred_index_sub = pred_index[:, i, :, :]
+            pred_index_sub = pred[:, i, :, :]
             target_sub = target[:, i, :, :]
             mask_sub = mask[:, i, :, :]
             self.current_state[i, :, :] = np.bincount(
                 self.binary * target_sub[mask_sub].astype('int') +
-                pred_index_sub[mask_sub],
-                minlength=self.binary ** 2
+                pred_index_sub[mask_sub], minlength=self.binary ** 2
             ).reshape(self.binary, self.binary)
         return self.current_state
 
@@ -152,8 +140,8 @@ class Accuracy(ConfusionMatrix):
 
 @METRICS.register_module
 class MultiLabelIoU(MultiLabelConfusionMatrix):
-    def __init__(self, num_classes, threshold):
-        super().__init__(num_classes, threshold)
+    def __init__(self, num_classes):
+        super().__init__(num_classes)
 
     def accumulate(self):
         ious = self.cfsmtx.diagonal(axis1=1, axis2=2) / (
@@ -169,8 +157,8 @@ class MultiLabelIoU(MultiLabelConfusionMatrix):
 
 @METRICS.register_module
 class MultiLabelMIoU(MultiLabelIoU):
-    def __init__(self, num_classes, threshold):
-        super().__init__(num_classes, threshold)
+    def __init__(self, num_classes):
+        super().__init__(num_classes)
 
     def accumulate(self):
         ious = (super().accumulate())['IoUs']

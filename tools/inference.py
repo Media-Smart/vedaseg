@@ -2,8 +2,7 @@ import argparse
 import os
 import sys
 
-sys.path.insert(0,
-                os.path.join(os.path.abspath(os.path.dirname(__file__)), '../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../'))
 
 import cv2
 import numpy as np
@@ -130,6 +129,8 @@ def main():
     h, w, c = image.shape
     dummy_mask = np.zeros((h, w))
     output = runner(image, [dummy_mask])
+    if multi_label:
+        output = output.transpose((1, 2, 0))
 
     if args.need_resize:
         output = inverse_resize(output, image.shape)

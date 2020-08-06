@@ -1,6 +1,7 @@
 import os
 
 import cv2
+import torch
 import numpy as np
 
 from volksdep.metrics import Metric as BaseMetric
@@ -42,11 +43,13 @@ class CalibDataset(Dataset):
 
 
 class Metric(BaseMetric):
-    def __init__(self, metric):
+    def __init__(self, metric, postprocess):
         self.metric = metric
+        self.postprocess = postprocess
 
     def __call__(self, preds, targets):
         self.metric.reset()
+        preds = self.postprocess(torch.from_numpy(preds)).numpy()
         self.metric(preds, targets)
         res = self.metric.accumulate()
 

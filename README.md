@@ -63,20 +63,20 @@ We have tested the following versions of OS and softwares:
 
 ### Install vedaseg
 
-a. Create a conda virtual environment and activate it.
+1. Create a conda virtual environment and activate it.
 
 ```shell
 conda create -n vedaseg python=3.6.9 -y
 conda activate vedaseg
 ```
 
-b. Install PyTorch and torchvision following the [official instructions](https://pytorch.org/), *e.g.*,
+2. Install PyTorch and torchvision following the [official instructions](https://pytorch.org/), *e.g.*,
 
 ```shell
 conda install pytorch torchvision -c pytorch
 ```
 
-c. Clone the vedaseg repository.
+3. Clone the vedaseg repository.
 
 ```shell
 git clone https://github.com/Media-Smart/vedaseg.git
@@ -84,7 +84,7 @@ cd vedaseg
 vedaseg_root=${PWD}
 ```
 
-d. Install dependencies.
+4. Install dependencies.
 
 ```shell
 pip install -r requirements.txt
@@ -94,7 +94,7 @@ pip install -r requirements.txt
 ### VOC data
 Download [Pascal VOC 2012](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Pascal VOC 2012 augmented](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz) (you can get details at [Semantic Boundaries Dataset and Benchmark](http://home.bharathh.info/pubs/codes/SBD/download.html)), resulting in 10,582 training images(trainaug), 1,449 validatation images.
 
-```
+```shell
 cd ${vedaseg_root}
 mkdir ${vedaseg_root}/data
 cd ${vedaseg_root}/data
@@ -119,7 +119,7 @@ comm -23 <(cat benchmark_RELEASE/dataset/{train,val}.txt VOCdevkit/VOC2012/Image
 To avoid tedious operations, you could save the above linux commands as a shell file and execute it.
 ### COCO data
 Download the COCO-2017 dataset.
-```
+```shell
 cd ${vedaseg_root}
 mkdir ${vedaseg_root}/data
 cd ${vedaseg_root}/data
@@ -153,12 +153,12 @@ data
 ```
 ## Train
 
-a. Config
+1. Config
 
 Modify some configuration accordingly in the config file like `configs/voc_unet.py`
-* for multi-label training use config file `configs/coco_multilabel_unet.py` and modify some configuration, the difference between single-label and multi-label training are mainly in following parameter in config file: `nclasses`,`multi_label`, `metrics` and `criterion`. Currently multi-label training is only supported in coco data format.
+* for multi-label training use config file `configs/coco_multilabel_unet.py` and modify some configuration, the difference between single-label and multi-label training are mainly in following parameter in config file: `nclasses`, `multi_label`, `metrics` and `criterion`. Currently multi-label training is only supported in coco data format.
 
-b. Run
+2. Run
 
 ```shell
 python tools/trainval.py configs/voc_unet.py
@@ -168,11 +168,11 @@ Snapshots and logs will be generated at `${vedaseg_root}/workdir`.
 
 ## Test
 
-a. Config
+1. Config
 
 Modify some configuration accordingly in the config file like `configs/voc_unet.py`
 
-b. Run
+2. Run
 
 ```shell
 python tools/test.py configs/voc_unet.py checkpoint_path
@@ -180,38 +180,53 @@ python tools/test.py configs/voc_unet.py checkpoint_path
 
 ## Inference
 
-a. Config
+1. Config
 
 Modify some configuration accordingly in the config file like `configs/voc_unet.py`
 
-b. Run
+2. Run
+
 ```shell
 # visualize the results in a new window
-python tools/inference.py configs/voc_unet.py checkpoint_path image_path --show
+python tools/inference.py configs/voc_unet.py checkpoint_path image_file_path --show
 
 # save the visualization results in folder which named with image prefix, default under folder './result/'
-python tools/inference.py configs/voc_unet.py checkpoint_path image_path --out folder_name
+python tools/inference.py configs/voc_unet.py checkpoint_path image_file_path --out folder_name
 ```
 
 ## Deploy
 ### Known issues
 1. Currently only pspnet model is not supported due to `AdaptiveAvgPool2d`.
-2. Default onnx opset version is 9, PyTorch Upsample operation is only supported with specified size, nearest mode and align_corners being None. Set `opset_version=11` in file `volksdep/converters/torch2onnx.py`, if bilinear mode and align_corners are wanted. 
+2. Default onnx opset version is 9, PyTorch Upsample operation is only supported with specified size, nearest mode and align_corners being None under this version. Set `opset_version=11` in file `volksdep/converters/torch2onnx.py`, if bilinear mode and align_corners are wanted. 
 ### Usage
-a. Install volksdep following the [official instructions](https://github.com/Media-Smart/volksdep)
+1. Install volksdep following the [official instructions](https://github.com/Media-Smart/volksdep)
 
-b. Benchmark(optional)
+2. Benchmark(optional)
 ```shell
-python tools/deploy/benchmark.py configs/voc_unet.py checkpoint_path image_path
+python tools/deploy/benchmark.py configs/voc_unet.py checkpoint_path image_file_path --calibration_images image_folder_path
 ```
 More available arguments are detailed in [tools/deploy/benchmark.py](https://github.com/Media-Smart/vedacls/blob/master/tools/deploy/benchmark.py)
 
-c. Export model
+The result of Unet is as follows（test device: Jetson AGX Xavier, CUDA:10.2）:
+
+| framework  |  version   |     input shape      |         data type         |   throughput(FPS)    |   latency(ms)   |
+|   :---:    |    :---:   |       :---:          |          :---:            |         :---:        |      :---:      |
+|  pytorch   |   1.5.0    |   (1, 3, 513, 513)   |           fp32            |          5           |      180.8      |
+|  tensorrt  |  7.1.0.16  |   (1, 3, 513, 513)   |           fp32            |          9           |     103.53      |
+|  pytorch   |   1.5.0    |   (1, 3, 513, 513)   |           fp16            |          15          |      63.27      |
+|  tensorrt  |  7.1.0.16  |   (1, 3, 513, 513)   |           fp16            |          29          |      34.03      |
+|  tensorrt  |  7.1.0.16  |   (1, 3, 513, 513)   |      int8(entropy_2)      |          47          |      21.56      |
+
+3. Export model
 ```shell
-python tools/deploy/export.py configs/voc_unet.py checkpoint_path image_path out_model_path
+python tools/deploy/export.py configs/voc_unet.py checkpoint_path image_file_path out_model_path
 ```
 
 More available arguments are detailed in [tools/deploy/export.py](https://github.com/Media-Smart/vedacls/blob/master/tools/deploy/export.py)
+
+4. Inference SDK
+
+You can refer to [FlexInfer](https://github.com/Media-Smart/flexinfer) for details.
 
 ## Contact
 

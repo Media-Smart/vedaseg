@@ -28,13 +28,9 @@ class TestRunner(InferenceRunner):
                     output = self._tta_compute(image)
                 else:
                     output = self.model(image)
+                    output = self.compute(output)
 
-                if isinstance(output, list):
-                    output = [o.cpu().numpy() for o in output]
-                else:
-                    output = output.cpu().numpy()
-
-                self.metric(output, mask.cpu().numpy())
+                self.metric(output.cpu().numpy(), mask.cpu().numpy())
                 res = self.metric.accumulate()
                 self.logger.info('Test, Iter {}, {}'.format(
                     idx + 1,
@@ -62,7 +58,11 @@ class TestRunner(InferenceRunner):
                 probs.append(prob)
 
         if self.multi_label:
-            return probs  # t b c h w
+            prob = torch.stack(probs, dim=0).sigmoid().mean(dim=0)
+            prob = torch.where(prob >= 0.5,
+                               torch.full_like(prob, 1),
+                               torch.full_like(prob, 0)).long()  # b c h w
         else:
-            prob = torch.stack(probs, dim=0).softmax(dim=2).mean(dim=0)  # b c h w
-            return prob
+            prob = torch.stack(probs, dim=0).softmax(dim=2).mean(dim=0)
+            _, prob = torch.max(prob, dim=1)  # b h w
+        return prob
