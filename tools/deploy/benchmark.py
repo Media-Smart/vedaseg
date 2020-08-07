@@ -69,7 +69,7 @@ def main():
         int8_calibrator = [CALIBRATORS[mode](dataset=calib_dataset)
                            for mode in args.calibration_modes]
     dataset = runner.test_dataloader.dataset
-    metric = Metric(runner.metric)
+    metric = Metric(runner.metric, runner.compute)
     benchmark(model, shape, dtypes=dtypes, iters=iters,
               int8_calibrator=int8_calibrator, dataset=dataset, metric=metric)
 

@@ -45,13 +45,13 @@ class InferenceRunner(Common):
 
         return model
 
-    def _compute(self, output):
+    def compute(self, output):
         if self.multi_label:
             output = output.sigmoid()
             output = torch.where(output >= 0.5,
                                  torch.full_like(output, 1),
-                                 torch.full_like(output, 0))
-            output = output.permute(0, 2, 3, 1)
+                                 torch.full_like(output, 0)).long()
+
         else:
             output = output.softmax(dim=1)
             _, output = torch.max(output, dim=1)
@@ -66,7 +66,7 @@ class InferenceRunner(Common):
                 image = image.cuda()
 
             output = self.model(image)
-            output = self._compute(output)
+            output = self.compute(output)
 
             output = output.squeeze().cpu().numpy()
 

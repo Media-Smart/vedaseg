@@ -33,6 +33,7 @@ class TrainRunner(InferenceRunner):
         self.trainval_ratio = train_cfg.get('trainval_ratio', -1)
         self.snapshot_interval = train_cfg.get('snapshot_interval', -1)
         self.save_best = train_cfg.get('save_best', True)
+        self.iter_based = hasattr(self.lr_scheduler, '_iter_based')
 
         assert self.workdir is not None
         assert self.log_interval > 0
@@ -59,7 +60,6 @@ class TrainRunner(InferenceRunner):
         self.model.train()
 
         self.logger.info('Epoch {}, start training'.format(self.epoch + 1))
-        iter_based = hasattr(self.lr_scheduler, '_iter_based')
 
         for idx, (image, mask) in enumerate(self.train_dataloader):
             self.optimizer.zero_grad()
@@ -75,22 +75,23 @@ class TrainRunner(InferenceRunner):
             self.optimizer.step()
 
             self.iter += 1
+            with torch.no_grad():
+                output = self.compute(output)
+                self.metric(output.cpu().numpy(), mask.cpu().numpy())
+                res = self.metric.accumulate()
 
             if self.iter % self.log_interval == 0:
-                with torch.no_grad():
-                    self.metric(output.cpu().numpy(), mask.cpu().numpy())
-                    res = self.metric.accumulate()
-                    self.logger.info(
-                        'Train, Epoch {}, Iter {}, LR {}, Loss {:.4f}, {}'.format(
-                            self.epoch + 1, self.iter,
-                            ['{:.4f}'.format(lr) for lr in self.lr],
-                            loss.item(),
-                            ', '.join(
-                                ['{}: {}'.format(k, np.round(v, 4)) for k, v in
-                                 res.items()])))
-            if iter_based:
+                self.logger.info(
+                    'Train, Epoch {}, Iter {}, LR {}, Loss {:.4f}, {}'.format(
+                        self.epoch + 1, self.iter,
+                        ['{:.4f}'.format(lr) for lr in self.lr],
+                        loss.item(),
+                        ', '.join(
+                            ['{}: {}'.format(k, np.round(v, 4)) for k, v in
+                             res.items()])))
+            if self.iter_based:
                 self.lr_scheduler.step()
-        if not iter_based:
+        if not self.iter_based:
             self.lr_scheduler.step()
 
     def _val(self):
@@ -106,7 +107,7 @@ class TrainRunner(InferenceRunner):
                     image = image.cuda()
 
                 output = self.model(image)
-
+                output = self.compute(output)
                 self.metric(output.cpu().numpy(), mask.cpu().numpy())
                 res = self.metric.accumulate()
 

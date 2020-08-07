@@ -206,8 +206,8 @@ common = dict(
     cudnn_deterministic=False,
     cudnn_benchmark=True,
     metrics=[
-        dict(type='MultiLabelIoU', num_classes=nclasses, threshold=0.5),
-        dict(type='MultiLabelMIoU', num_classes=nclasses, threshold=0.5),
+        dict(type='MultiLabelIoU', num_classes=nclasses),
+        dict(type='MultiLabelMIoU', num_classes=nclasses),
     ]
 )
 
