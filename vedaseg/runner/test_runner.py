@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn.functional as F
 
 from .inference_runner import InferenceRunner
+from ..utils import gather_tensor
 
 
 class TestRunner(InferenceRunner):
@@ -10,6 +11,8 @@ class TestRunner(InferenceRunner):
         super().__init__(inference_cfg, base_cfg)
 
         self.test_dataloader = self._build_dataloader(test_cfg['data'])
+        self.test_exclude_num = self.world_size - len(
+            self.test_dataloader.dataset) % self.world_size
         self.tta = test_cfg.get('tta', False)
 
     def __call__(self):
@@ -23,6 +26,7 @@ class TestRunner(InferenceRunner):
             for idx, (image, mask) in enumerate(self.test_dataloader):
                 if self.use_gpu:
                     image = image.cuda()
+                    mask = mask.cuda()
 
                 if self.tta:
                     output = self._tta_compute(image)
@@ -30,14 +34,21 @@ class TestRunner(InferenceRunner):
                     output = self.model(image)
                     output = self.compute(output)
 
+                output = gather_tensor(output)
+                mask = gather_tensor(mask)
+                if idx + 1 == len(
+                        self.test_dataloader) and self.test_exclude_num > 0:
+                    output = output[:-self.test_exclude_num]
+                    mask = mask[:-self.test_exclude_num]
+
                 self.metric(output.cpu().numpy(), mask.cpu().numpy())
                 res = self.metric.accumulate()
                 self.logger.info('Test, Iter {}, {}'.format(
                     idx + 1,
                     ', '.join(['{}: {}'.format(k, np.round(v, 4)) for k, v in
                                res.items()])))
-        self.logger.info(', '.join(
-            ['{}: {}'.format(k, np.round(v, 4)) for k, v in res.items()]))
+        self.logger.info('Test Result: {}'.format(', '.join(
+            ['{}: {}'.format(k, np.round(v, 4)) for k, v in res.items()])))
 
         return res
 

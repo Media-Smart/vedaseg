@@ -38,11 +38,19 @@ class InferenceRunner(Common):
         self.logger.info('Build model')
 
         model = build_model(cfg)
-        if torch.cuda.is_available():
-            if torch.cuda.device_count() > 1:
-                model = torch.nn.DataParallel(model)
-            model.cuda()
 
+        if torch.cuda.is_available():
+            if self.distribute:
+                model = torch.nn.parallel.DistributedDataParallel(
+                    model.cuda(),
+                    device_ids=[torch.cuda.current_device()],
+                    broadcast_buffers=True,
+                )
+                self.logger.info('Using distributed training')
+            else:
+                if torch.cuda.device_count() > 1:
+                    model = torch.nn.DataParallel(model)
+                model.cuda()
         return model
 
     def compute(self, output):

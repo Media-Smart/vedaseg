@@ -9,6 +9,7 @@ size_w = 513
 img_norm_cfg = dict(mean=(0.485, 0.456, 0.406),
                     std=(0.229, 0.224, 0.225),
                     max_pixel_value=255.0)
+norm_cfg = dict(type='BN')
 multi_label = True
 
 inference = dict(
@@ -29,6 +30,7 @@ inference = dict(
                 type='ResNet',
                 arch='resnet101',
                 pretrain=True,
+                norm_cfg=norm_cfg,
             ),
         ),
         # model/decoder
@@ -58,7 +60,7 @@ inference = dict(
                         out_channels=256,
                         kernel_size=3,
                         padding=1,
-                        norm_cfg=dict(type='BN'),
+                        norm_cfg=norm_cfg,
                         act_cfg=dict(type='Relu', inplace=True),
                         num_convs=2,
                     ),
@@ -86,7 +88,7 @@ inference = dict(
                         out_channels=128,
                         kernel_size=3,
                         padding=1,
-                        norm_cfg=dict(type='BN'),
+                        norm_cfg=norm_cfg,
                         act_cfg=dict(type='Relu', inplace=True),
                         num_convs=2,
                     ),
@@ -114,7 +116,7 @@ inference = dict(
                         out_channels=64,
                         kernel_size=3,
                         padding=1,
-                        norm_cfg=dict(type='BN'),
+                        norm_cfg=norm_cfg,
                         act_cfg=dict(type='Relu', inplace=True),
                         num_convs=2,
                     ),
@@ -141,7 +143,7 @@ inference = dict(
                         out_channels=32,
                         kernel_size=3,
                         padding=1,
-                        norm_cfg=dict(type='BN'),
+                        norm_cfg=norm_cfg,
                         act_cfg=dict(type='Relu', inplace=True),
                         num_convs=2,
                     ),
@@ -167,7 +169,7 @@ inference = dict(
                         out_channels=16,
                         kernel_size=3,
                         padding=1,
-                        norm_cfg=dict(type='BN'),
+                        norm_cfg=norm_cfg,
                         act_cfg=dict(type='Relu', inplace=True),
                         num_convs=2,
                     ),
@@ -222,10 +224,13 @@ test = dict(
             multi_label=multi_label,
         ),
         transforms=inference['transforms'],
+        sampler=dict(
+            type='DistributedSampler',
+        ),
         dataloader=dict(
             type='DataLoader',
-            batch_size=8,
-            num_workers=4,
+            samples_per_gpu=4,
+            workers_per_gpu=4,
             shuffle=False,
             drop_last=False,
             pin_memory=True,
@@ -266,10 +271,13 @@ train = dict(
                 dict(type='Normalize', **img_norm_cfg),
                 dict(type='ToTensor'),
             ],
+            sampler=dict(
+                type='DistributedSampler',
+            ),
             dataloader=dict(
                 type='DataLoader',
-                batch_size=16,
-                num_workers=4,
+                samples_per_gpu=8,
+                workers_per_gpu=4,
                 shuffle=True,
                 drop_last=True,
                 pin_memory=True,
@@ -284,10 +292,13 @@ train = dict(
                 multi_label=multi_label,
             ),
             transforms=inference['transforms'],
+            sampler=dict(
+                type='DistributedSampler',
+            ),
             dataloader=dict(
                 type='DataLoader',
-                batch_size=8,
-                num_workers=4,
+                samples_per_gpu=8,
+                workers_per_gpu=4,
                 shuffle=False,
                 drop_last=False,
                 pin_memory=True,

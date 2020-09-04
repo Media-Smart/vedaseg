@@ -11,14 +11,19 @@ vedaseg is an open source semantic segmentation toolbox based on PyTorch.
 
   The toolbox supports several popular and semantic segmentation frameworks out of box, *e.g.* DeepLabv3+, DeepLabv3, U-Net, PSPNet, FPN, etc.
 
-- **Deployment and acceleration**
+- **Support of deployment and acceleration**
 
-  The toolbox can automatically transform and accelerate PyTorch, Onnx and Tensorflow models with TensorRT, can also automatically generate benchmark with given model.
+  The toolbox can accelerate models using TensorRT, as well as benchmarking.
 
-- **Different training modes**
+- **Support of multiple train/test modes**
     
-  The toolbox supports both single-label training and multi-label training.
+  The toolbox supports both distributed and non-distributed modes. 
   
+- **Support of multiple train/test tasks**
+
+  The toolbox supports both single-label and multi-label tasks.
+
+
 ## License
 
 This project is released under the [Apache 2.0 license](LICENSE).
@@ -158,10 +163,15 @@ data
 Modify some configuration accordingly in the config file like `configs/voc_unet.py`
 * for multi-label training use config file `configs/coco_multilabel_unet.py` and modify some configuration, the difference between single-label and multi-label training are mainly in following parameter in config file: `nclasses`, `multi_label`, `metrics` and `criterion`. Currently multi-label training is only supported in coco data format.
 
-2. Run
+2. Non-distributed training
 
 ```shell
-python tools/trainval.py configs/voc_unet.py
+python tools/train.py configs/voc_unet.py
+```
+
+3. Ditributed training
+```shell
+./tools/dist_train.sh configs/voc_unet.py gpu_num
 ```
 
 Snapshots and logs will be generated at `${vedaseg_root}/workdir`.
@@ -172,10 +182,15 @@ Snapshots and logs will be generated at `${vedaseg_root}/workdir`.
 
 Modify some configuration accordingly in the config file like `configs/voc_unet.py`
 
-2. Run
+2. Non-distributed testing
 
 ```shell
 python tools/test.py configs/voc_unet.py checkpoint_path
+```
+
+3. Ditributed testing
+```shell
+./tools/dist_test.sh configs/voc_unet.py checkpoint_path gpu_num
 ```
 
 ## Inference
