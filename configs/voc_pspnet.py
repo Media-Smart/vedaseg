@@ -9,6 +9,7 @@ size_w = 513
 img_norm_cfg = dict(mean=(0.485, 0.456, 0.406),
                     std=(0.229, 0.224, 0.225),
                     max_pixel_value=255.0)
+norm_cfg = dict(type='BN')
 multi_label = False
 
 inference = dict(
@@ -27,6 +28,7 @@ inference = dict(
                 type='ResNet',
                 arch='resnet101',
                 replace_stride_with_dilation=[False, True, True],
+                norm_cfg=norm_cfg,
             ),
             enhance=dict(
                 type='PPM',
@@ -37,6 +39,7 @@ inference = dict(
                 bins=[1, 2, 3, 6],
                 mode='bilinear',
                 align_corners=True,
+                norm_cfg=norm_cfg,
             ),
         ),
         collect=dict(type='CollectBlock', from_layer='enhance'),
@@ -46,6 +49,7 @@ inference = dict(
             in_channels=4096,
             inter_channels=512,
             out_channels=nclasses,
+            norm_cfg=norm_cfg,
             num_convs=1,
             dropouts=[0.1],
             upsample=dict(
@@ -89,10 +93,13 @@ test = dict(
             multi_label=multi_label,
         ),
         transforms=inference['transforms'],
+        sampler=dict(
+            type='DistributedSampler',
+        ),
         dataloader=dict(
             type='DataLoader',
-            batch_size=8,
-            num_workers=4,
+            samples_per_gpu=4,
+            workers_per_gpu=4,
             shuffle=False,
             drop_last=False,
             pin_memory=True,
@@ -132,10 +139,13 @@ train = dict(
                 dict(type='Normalize', **img_norm_cfg),
                 dict(type='ToTensor'),
             ],
+            sampler=dict(
+                type='DistributedSampler',
+            ),
             dataloader=dict(
                 type='DataLoader',
-                batch_size=16,
-                num_workers=4,
+                samples_per_gpu=8,
+                workers_per_gpu=4,
                 shuffle=True,
                 drop_last=True,
                 pin_memory=True,
@@ -149,10 +159,13 @@ train = dict(
                 multi_label=multi_label,
             ),
             transforms=inference['transforms'],
+            sampler=dict(
+                type='DistributedSampler',
+            ),
             dataloader=dict(
                 type='DataLoader',
-                batch_size=8,
-                num_workers=4,
+                samples_per_gpu=8,
+                workers_per_gpu=4,
                 shuffle=False,
                 drop_last=False,
                 pin_memory=True,

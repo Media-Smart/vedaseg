@@ -93,8 +93,7 @@ def result(fname,
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description='inference a semantic segmentatation model')
+    parser = argparse.ArgumentParser(description='Inference a segmentatation model')
     parser.add_argument('config', type=str,
                         help='config file path')
     parser.add_argument('checkpoint',
