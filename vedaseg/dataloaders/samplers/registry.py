@@ -1,7 +1,4 @@
-from torch.utils.data import DistributedSampler
-
 from ...utils import Registry
 
-SAMPLERS = Registry('sampler')
-
-SAMPLERS.register_module(DistributedSampler)
+DISTRIBUTED_SAMPLERS = Registry('distributed_sampler')
+NON_DISTRIBUTED_SAMPLERS = Registry('non_distributed_sampler')

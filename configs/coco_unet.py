@@ -226,7 +226,7 @@ test = dict(
         ),
         transforms=inference['transforms'],
         sampler=dict(
-            type='DistributedSampler',
+            type='DefaultSampler',
         ),
         dataloader=dict(
             type='DataLoader',
@@ -273,7 +273,7 @@ train = dict(
                 dict(type='ToTensor'),
             ],
             sampler=dict(
-                type='DistributedSampler',
+                type='DefaultSampler',
             ),
             dataloader=dict(
                 type='DataLoader',
@@ -288,13 +288,13 @@ train = dict(
             dataset=dict(
                 type=dataset_type,
                 root=dataset_root,
-                ann_file='instances_val2014.json',
-                img_prefix='val2014',
+                ann_file='instances_val2017.json',
+                img_prefix='val2017',
                 multi_label=multi_label,
             ),
             transforms=inference['transforms'],
             sampler=dict(
-                type='DistributedSampler',
+                type='DefaultSampler',
             ),
             dataloader=dict(
                 type='DataLoader',

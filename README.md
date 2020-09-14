@@ -163,15 +163,14 @@ data
 Modify some configuration accordingly in the config file like `configs/voc_unet.py`
 * for multi-label training use config file `configs/coco_multilabel_unet.py` and modify some configuration, the difference between single-label and multi-label training are mainly in following parameter in config file: `nclasses`, `multi_label`, `metrics` and `criterion`. Currently multi-label training is only supported in coco data format.
 
-2. Non-distributed training
-
-```shell
-python tools/train.py configs/voc_unet.py
-```
-
-3. Ditributed training
+2. Ditributed training
 ```shell
 ./tools/dist_train.sh configs/voc_unet.py gpu_num
+```
+
+3. Non-distributed training
+```shell
+python tools/train.py configs/voc_unet.py
 ```
 
 Snapshots and logs will be generated at `${vedaseg_root}/workdir`.
@@ -182,15 +181,14 @@ Snapshots and logs will be generated at `${vedaseg_root}/workdir`.
 
 Modify some configuration accordingly in the config file like `configs/voc_unet.py`
 
-2. Non-distributed testing
-
-```shell
-python tools/test.py configs/voc_unet.py checkpoint_path
-```
-
-3. Ditributed testing
+2. Ditributed testing
 ```shell
 ./tools/dist_test.sh configs/voc_unet.py checkpoint_path gpu_num
+```
+
+3. Non-distributed testing
+```shell
+python tools/test.py configs/voc_unet.py checkpoint_path
 ```
 
 ## Inference

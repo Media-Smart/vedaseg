@@ -85,14 +85,16 @@ class Common:
         transform = build_transform(cfg['transforms'])
         dataset = build_dataset(cfg['dataset'], dict(transform=transform))
 
-        shuffle = cfg['dataloader'].get('shuffle', False)
-        sampler = build_sampler(cfg['sampler'], dict(dataset=dataset,
-                                                     shuffle=shuffle)) if cfg.get(
-            'sampler') is not None else None
+        shuffle = cfg['dataloader'].pop('shuffle', False)
+        sampler = build_sampler(self.distribute,
+                                cfg['sampler'],
+                                dict(dataset=dataset,
+                                     shuffle=shuffle))
 
         dataloader = build_dataloader(self.distribute,
                                       self.gpu_num,
-                                      cfg['dataloader'], dict(dataset=dataset,
-                                                              sampler=sampler))
+                                      cfg['dataloader'],
+                                      dict(dataset=dataset,
+                                           sampler=sampler))
 
         return dataloader
