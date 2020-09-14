@@ -225,7 +225,7 @@ test = dict(
         ),
         transforms=inference['transforms'],
         sampler=dict(
-            type='DistributedSampler',
+            type='DefaultSampler',
         ),
         dataloader=dict(
             type='DataLoader',
@@ -272,7 +272,7 @@ train = dict(
                 dict(type='ToTensor'),
             ],
             sampler=dict(
-                type='DistributedSampler',
+                type='DefaultSampler',
             ),
             dataloader=dict(
                 type='DataLoader',
@@ -293,7 +293,7 @@ train = dict(
             ),
             transforms=inference['transforms'],
             sampler=dict(
-                type='DistributedSampler',
+                type='DefaultSampler',
             ),
             dataloader=dict(
                 type='DataLoader',
