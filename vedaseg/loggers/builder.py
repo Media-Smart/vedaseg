@@ -3,6 +3,8 @@ import os
 import sys
 import time
 
+import torch.distributed as dist
+
 
 def build_logger(cfg, default_args):
     timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
@@ -12,11 +14,20 @@ def build_logger(cfg, default_args):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
+    if dist.is_available() and dist.is_initialized():
+        rank = dist.get_rank()
+    else:
+        rank = 0
+
+    if rank == 0:
+        pass
+
     for handler in cfg['handlers']:
         if handler['type'] == 'StreamHandler':
             instance = logging.StreamHandler(sys.stdout)
         elif handler['type'] == 'FileHandler':
-            if default_args.get('workdir'):
+            # only rank 0 will add a FileHandler
+            if default_args.get('workdir') and rank == 0:
                 fp = os.path.join(default_args['workdir'], '%s.log' % timestamp)
                 instance = logging.FileHandler(fp, 'w')
             else:
@@ -27,7 +38,10 @@ def build_logger(cfg, default_args):
         level = getattr(logging, handler['level'])
 
         instance.setFormatter(formatter)
-        instance.setLevel(level)
+        if rank == 0:
+            instance.setLevel(level)
+        else:
+            logger.setLevel(logging.ERROR)
 
         logger.addHandler(instance)
 

@@ -8,7 +8,7 @@ import numpy as np
 from ..optims import build_optimizer
 from ..criteria import build_criterion
 from ..lr_schedulers import build_lr_scheduler
-from ..utils import save_checkpoint
+from ..utils import save_checkpoint, gather_tensor, reduce_tensor
 from .inference_runner import InferenceRunner
 
 
@@ -22,6 +22,8 @@ class TrainRunner(InferenceRunner):
         if 'val' in train_cfg['data']:
             self.val_dataloader = self._build_dataloader(
                 train_cfg['data']['val'])
+            self.val_exclude_num = self.world_size - len(
+                self.val_dataloader.dataset) % self.world_size
         else:
             self.val_dataloader = None
 
@@ -60,10 +62,8 @@ class TrainRunner(InferenceRunner):
         self.model.train()
 
         self.logger.info('Epoch {}, start training'.format(self.epoch + 1))
-
         for idx, (image, mask) in enumerate(self.train_dataloader):
             self.optimizer.zero_grad()
-
             if self.use_gpu:
                 image = image.cuda()
                 mask = mask.cuda()
@@ -75,8 +75,14 @@ class TrainRunner(InferenceRunner):
             self.optimizer.step()
 
             self.iter += 1
+
             with torch.no_grad():
                 output = self.compute(output)
+
+                output = gather_tensor(output)
+                mask = gather_tensor(mask)
+                reduced_loss = reduce_tensor(loss.item())
+
                 self.metric(output.cpu().numpy(), mask.cpu().numpy())
                 res = self.metric.accumulate()
 
@@ -85,12 +91,13 @@ class TrainRunner(InferenceRunner):
                     'Train, Epoch {}, Iter {}, LR {}, Loss {:.4f}, {}'.format(
                         self.epoch + 1, self.iter,
                         ['{:.4f}'.format(lr) for lr in self.lr],
-                        loss.item(),
-                        ', '.join(
+                        reduced_loss, ', '.join(
                             ['{}: {}'.format(k, np.round(v, 4)) for k, v in
                              res.items()])))
+
             if self.iter_based:
                 self.lr_scheduler.step()
+
         if not self.iter_based:
             self.lr_scheduler.step()
 
@@ -105,9 +112,19 @@ class TrainRunner(InferenceRunner):
             for idx, (image, mask) in enumerate(self.val_dataloader):
                 if self.use_gpu:
                     image = image.cuda()
+                    mask = mask.cuda()
 
                 output = self.model(image)
                 output = self.compute(output)
+
+                output = gather_tensor(output)
+                mask = gather_tensor(mask)
+
+                if idx + 1 == len(
+                        self.val_dataloader) and self.val_exclude_num > 0:
+                    output = output[:-self.val_exclude_num]
+                    mask = mask[:-self.val_exclude_num]
+
                 self.metric(output.cpu().numpy(), mask.cpu().numpy())
                 res = self.metric.accumulate()
 
@@ -122,6 +139,9 @@ class TrainRunner(InferenceRunner):
 
     def __call__(self):
         for _ in range(self.epoch, self.max_epochs):
+            if hasattr(self.train_dataloader.sampler, 'set_epoch'):
+                self.train_dataloader.sampler.set_epoch(self.epoch)
+
             self._train()
 
             if self.trainval_ratio > 0 and \
@@ -134,7 +154,7 @@ class TrainRunner(InferenceRunner):
                             self.best[k] = 0.0
                         if self.best[k] <= res[k]:
                             self.best[k] = res[k]
-                            if self.save_best:
+                            if self.save_best and self.rank == 0:
                                 self.save_checkpoint(
                                     self.workdir, 'best_{}.pth'.format(k),
                                     meta=dict(best=self.best))
@@ -142,7 +162,7 @@ class TrainRunner(InferenceRunner):
                     ['Best {}: {}'.format(k, v) for k, v in self.best.items()]))
 
             if self.snapshot_interval > 0 and \
-                    self.epoch % self.snapshot_interval == 0:
+                    self.epoch % self.snapshot_interval == 0 and self.rank == 0:
                 self.logger.info('Snapshot')
                 self.save_checkpoint(
                     self.workdir, 'epoch_{}.pth'.format(self.epoch),

@@ -9,6 +9,7 @@ size_w = 513
 img_norm_cfg = dict(mean=(0.485, 0.456, 0.406),
                     std=(0.229, 0.224, 0.225),
                     max_pixel_value=255.0)
+norm_cfg = dict(type='BN')
 multi_label = False
 
 inference = dict(
@@ -226,10 +227,13 @@ test = dict(
             multi_label=multi_label,
         ),
         transforms=inference['transforms'],
+        sampler=dict(
+            type='DefaultSampler',
+        ),
         dataloader=dict(
             type='DataLoader',
-            batch_size=8,
-            num_workers=4,
+            samples_per_gpu=4,
+            workers_per_gpu=4,
             shuffle=False,
             drop_last=False,
             pin_memory=True,
@@ -269,10 +273,13 @@ train = dict(
                 dict(type='Normalize', **img_norm_cfg),
                 dict(type='ToTensor'),
             ],
+            sampler=dict(
+                type='DefaultSampler',
+            ),
             dataloader=dict(
                 type='DataLoader',
-                batch_size=16,
-                num_workers=4,
+                samples_per_gpu=8,
+                workers_per_gpu=4,
                 shuffle=True,
                 drop_last=True,
                 pin_memory=True,
@@ -286,10 +293,13 @@ train = dict(
                 multi_label=multi_label,
             ),
             transforms=inference['transforms'],
+            sampler=dict(
+                type='DefaultSampler',
+            ),
             dataloader=dict(
                 type='DataLoader',
-                batch_size=8,
-                num_workers=4,
+                samples_per_gpu=8,
+                workers_per_gpu=4,
                 shuffle=False,
                 drop_last=False,
                 pin_memory=True,

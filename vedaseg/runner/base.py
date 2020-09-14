@@ -5,12 +5,13 @@ import torch
 import numpy as np
 from torch.backends import cudnn
 
-
 from ..loggers import build_logger
 from ..dataloaders import build_dataloader
+from ..dataloaders.samplers import build_sampler
 from ..datasets import build_dataset
 from ..transforms import build_transform
 from ..metrics import build_metrics
+from ..utils import init_dist_pytorch, get_dist_info
 
 
 class Common:
@@ -20,11 +21,20 @@ class Common:
         if logger_cfg is None:
             logger_cfg = dict(
                 handlers=(dict(type='StreamHandler', level='INFO'),))
+
         self.workdir = cfg.get('workdir')
-        self.logger = self._build_logger(logger_cfg)
+        self.distribute = cfg.get('distribute', False)
 
         # set gpu devices
         self.use_gpu = self._set_device(cfg.get('gpu_id', ''))
+
+        # set distribute setting
+        if self.distribute and self.use_gpu:
+            init_dist_pytorch(**cfg.dist_params)
+
+        self.rank, self.world_size = get_dist_info()
+
+        self.logger = self._build_logger(logger_cfg)
 
         # set cudnn configuration
         self._set_cudnn(
@@ -43,11 +53,10 @@ class Common:
 
     def _set_device(self, gpu_id):
         os.environ['CUDA_VISIBLE_DEVICES'] = gpu_id
+        self.gpu_num = torch.cuda.device_count()
         if torch.cuda.is_available():
-            self.logger.info('Use GPU {}'.format(gpu_id))
             use_gpu = True
         else:
-            self.logger.info('Use CPU')
             use_gpu = False
 
         return use_gpu
@@ -75,6 +84,17 @@ class Common:
     def _build_dataloader(self, cfg):
         transform = build_transform(cfg['transforms'])
         dataset = build_dataset(cfg['dataset'], dict(transform=transform))
-        dataloader = build_dataloader(cfg['dataloader'], dict(dataset=dataset))
+
+        shuffle = cfg['dataloader'].pop('shuffle', False)
+        sampler = build_sampler(self.distribute,
+                                cfg['sampler'],
+                                dict(dataset=dataset,
+                                     shuffle=shuffle))
+
+        dataloader = build_dataloader(self.distribute,
+                                      self.gpu_num,
+                                      cfg['dataloader'],
+                                      dict(dataset=dataset,
+                                           sampler=sampler))
 
         return dataloader

@@ -9,10 +9,14 @@ from vedaseg.utils import Config
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Test a semantic segmentatation model')
+    parser = argparse.ArgumentParser(description='Test a segmentation model')
     parser.add_argument('config', type=str, help='config file path')
     parser.add_argument('checkpoint', type=str, help='checkpoint file path')
+    parser.add_argument('--distribute', default=False, action='store_true')
+    parser.add_argument('--local_rank', type=int, default=0)
+    args = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
     args = parser.parse_args()
     return args
 
@@ -34,6 +38,7 @@ def main():
     inference_cfg = cfg['inference']
     common_cfg = cfg['common']
     common_cfg['workdir'] = workdir
+    common_cfg['distribute'] = args.distribute
 
     runner = TestRunner(test_cfg, inference_cfg, common_cfg)
     runner.load_checkpoint(args.checkpoint)
