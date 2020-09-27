@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from volksdep.converters import torch2onnx, torch2trt, save
 
-from vedaseg.runner import InferenceRunner
+from vedaseg.runners import InferenceRunner
 from vedaseg.utils import Config
 from tools.deploy.utils import CALIBRATORS, CalibDataset
 
