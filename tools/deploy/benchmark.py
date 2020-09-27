@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from volksdep.benchmark import benchmark
 
-from vedaseg.runner import TestRunner
+from vedaseg.runners import TestRunner
 from vedaseg.utils import Config
 from tools.deploy.utils import CALIBRATORS, CalibDataset, Metric
 

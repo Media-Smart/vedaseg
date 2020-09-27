@@ -4,7 +4,7 @@ import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../'))
 
-from vedaseg.runner import TrainRunner
+from vedaseg.runners import TrainRunner
 from vedaseg.utils import Config
 
 

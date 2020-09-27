@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from vedaseg.runner import InferenceRunner
+from vedaseg.runners import InferenceRunner
 from vedaseg.utils import Config
 
 CLASSES = ('background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
