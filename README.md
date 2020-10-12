@@ -9,20 +9,19 @@ vedaseg is an open source semantic segmentation toolbox based on PyTorch.
 
 - **Support of several popular frameworks**
 
-  The toolbox supports several popular and semantic segmentation frameworks out of box, *e.g.* DeepLabv3+, DeepLabv3, U-Net, PSPNet, FPN, etc.
+  The toolbox supports several popular semantic segmentation frameworks out of box, *e.g.* DeepLabv3+, DeepLabv3, U-Net, PSPNet, FPN, etc.
 
-- **Support of deployment and acceleration**
-
-  The toolbox can accelerate models using TensorRT, as well as benchmarking.
-
-- **Support of multiple train/test modes**
+- **High efficiency**
     
-  The toolbox supports both distributed and non-distributed modes. 
+  Multi-GPU data parallelism & distributed training.
   
-- **Support of multiple train/test tasks**
+- **Multi-Class/Multi-Label segmentation**
 
-  The toolbox supports both single-label and multi-label tasks.
+  We implement multi-class and multi-label segmentation(where a pixel can belong to multiple classes).
+ 
+- **Acceleration and deployment**
 
+  Models can be accelerated and deployed with TensorRT.
 
 ## License
 
