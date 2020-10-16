@@ -25,10 +25,11 @@ PALETTE = [[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
 
 def inverse_resize(pred, image_shape):
     h, w, _ = image_shape
-    reisze_h, resized_w = pred.shape[0], pred.shape[1]
-    scale_factor = max(h / reisze_h, w / resized_w)
-    pred = cv2.resize(pred, (
-        int(reisze_h * scale_factor), int(reisze_h * scale_factor)),
+    resized_h, resized_w = pred.shape[0], pred.shape[1]
+    scale_factor = max(h / resized_h, w / resized_w)
+    pred = cv2.resize(pred, 
+                      (int(resized_w * scale_factor), 
+                       int(resized_h * scale_factor)),
                       interpolation=cv2.INTER_NEAREST)
     return pred
 
@@ -71,6 +72,12 @@ def result(fname,
             mask[pred_mask[:, :, label] == 1] = color
         else:
             mask[pred_mask == label, :] = color
+
+    # temporary fix when there is a one-pixal gap between original image and
+    # mask
+    img_ori = cv2.resize(img_ori,
+                         (pred_mask.shape[1], pred_mask.shape[0]),
+                         interpolation=cv2.INTER_LINEAR)
 
     cover = img_ori * 0.5 + mask * 0.5
     cover = cover.astype(np.uint8)
