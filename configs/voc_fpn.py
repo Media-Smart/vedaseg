@@ -215,6 +215,7 @@ common = dict(
         dict(type='IoU', num_classes=nclasses),
         dict(type='MIoU', num_classes=nclasses, average='equal'),
     ],
+    dist_params=dict(backend='nccl'),
 )
 
 ## 2.1 configuration for test

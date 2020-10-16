@@ -210,7 +210,8 @@ common = dict(
     metrics=[
         dict(type='MultiLabelIoU', num_classes=nclasses),
         dict(type='MultiLabelMIoU', num_classes=nclasses),
-    ]
+    ],
+    dist_params=dict(backend='nccl'),
 )
 
 ## 2.1 configuration for test
