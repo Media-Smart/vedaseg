@@ -1,9 +1,7 @@
 matplotlib
 numpy
-pandas
 opencv-python
 addict
-six
 torch>=1.4.0
 torchvision>=0.4.0
 albumentations>=0.4.1
