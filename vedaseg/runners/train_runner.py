@@ -22,8 +22,8 @@ class TrainRunner(InferenceRunner):
         if 'val' in train_cfg['data']:
             self.val_dataloader = self._build_dataloader(
                 train_cfg['data']['val'])
-            self.val_exclude_num = self.world_size - len(
-                self.val_dataloader.dataset) % self.world_size
+            extra_data = len(self.val_dataloader.dataset) % self.world_size
+            self.val_exclude_num = self.world_size - extra_data if extra_data != 0 else 0
         else:
             self.val_dataloader = None
 
@@ -119,7 +119,6 @@ class TrainRunner(InferenceRunner):
 
                 output = gather_tensor(output)
                 mask = gather_tensor(mask)
-
                 if idx + 1 == len(
                         self.val_dataloader) and self.val_exclude_num > 0:
                     output = output[:-self.val_exclude_num]

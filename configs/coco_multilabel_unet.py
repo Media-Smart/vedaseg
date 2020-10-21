@@ -4,8 +4,8 @@ import cv2
 nclasses = 80
 ignore_label = 255
 image_pad_value = (123.675, 116.280, 103.530)
-size_h = 513
-size_w = 513
+crop_size_h, crop_size_w = 513, 513
+test_size_h, test_size_w = 641, 641
 img_norm_cfg = dict(mean=(0.485, 0.456, 0.406),
                     std=(0.229, 0.224, 0.225),
                     max_pixel_value=255.0)
@@ -16,9 +16,7 @@ inference = dict(
     gpu_id='0,1',
     multi_label=multi_label,
     transforms=[
-        dict(type='LongestMaxSize', h_max=size_h, w_max=size_w,
-             interpolation=cv2.INTER_LINEAR),
-        dict(type='PadIfNeeded', min_height=size_h, min_width=size_w,
+        dict(type='PadIfNeeded', min_height=test_size_h, min_width=test_size_w,
              value=image_pad_value, mask_value=ignore_label),
         dict(type='Normalize', **img_norm_cfg),
         dict(type='ToTensor'),
@@ -182,12 +180,6 @@ inference = dict(
             in_channels=16,
             out_channels=nclasses,
             num_convs=0,
-            upsample=dict(
-                type='Upsample',
-                size=(size_h, size_w),
-                mode='bilinear',
-                align_corners=True,
-            ),
         )
     )
 )
@@ -260,9 +252,9 @@ train = dict(
             transforms=[
                 dict(type='RandomScale', scale_limit=(0.5, 2),
                      interpolation=cv2.INTER_LINEAR),
-                dict(type='PadIfNeeded', min_height=size_h, min_width=size_w,
+                dict(type='PadIfNeeded', min_height=crop_size_h, min_width=crop_size_w,
                      value=image_pad_value, mask_value=ignore_label),
-                dict(type='RandomCrop', height=size_h, width=size_w),
+                dict(type='RandomCrop', height=crop_size_h, width=crop_size_w),
                 dict(type='Rotate', limit=10, interpolation=cv2.INTER_LINEAR,
                      border_mode=cv2.BORDER_CONSTANT,
                      value=image_pad_value, mask_value=ignore_label, p=0.5
@@ -312,7 +304,7 @@ train = dict(
     lr_scheduler=dict(type='PolyLR', max_epochs=max_epochs),
     max_epochs=max_epochs,
     trainval_ratio=1,
-    log_interval=5,
+    log_interval=10,
     snapshot_interval=5,
     save_best=True,
 )
