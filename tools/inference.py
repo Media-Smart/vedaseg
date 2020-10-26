@@ -24,20 +24,6 @@ PALETTE = [[0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
            [128, 64, 0], [0, 192, 0], [128, 192, 0], [0, 64, 128]]
 
 
-def calc_resized_shape(target_shape, image_shape):
-    h, w = image_shape
-    size_h, size_w = target_shape
-    scale_factor = min(size_h / h, size_w / w)
-    resized_h, resized_w = int(h * scale_factor), int(w * scale_factor)
-    return resized_h, resized_w
-
-
-def inverse_resize(output, image_shape):
-    h, w = image_shape
-    output = cv2.resize(output, (w, h), interpolation=cv2.INTER_NEAREST)
-    return output
-
-
 def inverse_pad(output, image_shape):
     h, w = image_shape
     return output[:h, :w]
@@ -108,8 +94,6 @@ def parse_args():
                         help='input image path')
     parser.add_argument('--show', action='store_true',
                         help='show result images on screen')
-    parser.add_argument('--need_resize', action='store_true',
-                        help='set true if there is LongestMaxSize in transform')
     parser.add_argument('--out', default='./result',
                         help='folder to store result images')
 
@@ -137,14 +121,8 @@ def main():
     output = runner(image, [dummy_mask])
     if multi_label:
         output = output.transpose((1, 2, 0))
-    output_shape = output.shape[:2]
 
-    if args.need_resize:
-        resized_shape = calc_resized_shape(output_shape, image_shape)
-        output = inverse_pad(output, resized_shape)
-        output = inverse_resize(output, image_shape)
-    else:
-        output = inverse_pad(output, image_shape)
+    output = inverse_pad(output, image_shape)
 
     result(args.image, output, multi_label=multi_label,
            classes=CLASSES, palette=PALETTE, show=args.show,

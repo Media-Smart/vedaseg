@@ -4,8 +4,8 @@ import cv2
 nclasses = 21
 ignore_label = 255
 image_pad_value = (123.675, 116.280, 103.530)
-size_h = 513
-size_w = 513
+crop_size_h, crop_size_w = 513, 513
+test_size_h, test_size_w = 513, 513
 img_norm_cfg = dict(mean=(0.485, 0.456, 0.406),
                     std=(0.229, 0.224, 0.225),
                     max_pixel_value=255.0)
@@ -16,7 +16,7 @@ inference = dict(
     gpu_id='0,1',
     multi_label=multi_label,
     transforms=[
-        dict(type='PadIfNeeded', min_height=size_h, min_width=size_w,
+        dict(type='PadIfNeeded', min_height=test_size_h, min_width=test_size_w,
              value=image_pad_value, mask_value=ignore_label),
         dict(type='Normalize', **img_norm_cfg),
         dict(type='ToTensor'),
@@ -181,12 +181,6 @@ inference = dict(
             out_channels=nclasses,
             norm_cfg=norm_cfg,
             num_convs=0,
-            upsample=dict(
-                type='Upsample',
-                size=(size_h, size_w),
-                mode='bilinear',
-                align_corners=True,
-            ),
         )
     )
 )
@@ -257,13 +251,12 @@ train = dict(
             transforms=[
                 dict(type='RandomScale', scale_limit=(0.5, 2),
                      interpolation=cv2.INTER_LINEAR),
-                dict(type='PadIfNeeded', min_height=size_h, min_width=size_w,
+                dict(type='PadIfNeeded', min_height=crop_size_h, min_width=crop_size_w,
                      value=image_pad_value, mask_value=ignore_label),
-                dict(type='RandomCrop', height=size_h, width=size_w),
+                dict(type='RandomCrop', height=crop_size_h, width=crop_size_w),
                 dict(type='Rotate', limit=10, interpolation=cv2.INTER_LINEAR,
                      border_mode=cv2.BORDER_CONSTANT,
-                     value=image_pad_value, mask_value=ignore_label, p=0.5
-                     ),
+                     value=image_pad_value, mask_value=ignore_label, p=0.5),
                 dict(type='GaussianBlur', blur_limit=7, p=0.5),
                 dict(type='HorizontalFlip', p=0.5),
                 dict(type='Normalize', **img_norm_cfg),

@@ -11,8 +11,9 @@ class TestRunner(InferenceRunner):
         super().__init__(inference_cfg, base_cfg)
 
         self.test_dataloader = self._build_dataloader(test_cfg['data'])
-        self.test_exclude_num = self.world_size - len(
-            self.test_dataloader.dataset) % self.world_size
+        extra_data = len(self.test_dataloader.dataset) % self.world_size
+        self.test_exclude_num = self.world_size - extra_data if extra_data != 0 else 0
+
         self.tta = test_cfg.get('tta', False)
 
     def __call__(self):
@@ -36,6 +37,7 @@ class TestRunner(InferenceRunner):
 
                 output = gather_tensor(output)
                 mask = gather_tensor(mask)
+
                 if idx + 1 == len(
                         self.test_dataloader) and self.test_exclude_num > 0:
                     output = output[:-self.test_exclude_num]
