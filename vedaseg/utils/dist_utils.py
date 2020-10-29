@@ -1,4 +1,4 @@
-# modify from mmcv and mmdetection
+# adapted from mmcv and mmdetection
 
 import os
 
