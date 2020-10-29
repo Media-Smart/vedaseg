@@ -1,3 +1,4 @@
+# adapted from https://github.com/open-mmlab/mmcv
 import sys
 import os.path as osp
 from argparse import ArgumentParser
