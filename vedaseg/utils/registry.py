@@ -1,3 +1,4 @@
+# adapted from https://github.com/open-mmlab/mmcv
 import inspect
 from functools import partial
 
