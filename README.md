@@ -243,6 +243,3 @@ You can refer to [FlexInfer](https://github.com/Media-Smart/flexinfer) for detai
 ## Contact
 
 This repository is currently maintained by Yuxin Zou ([@YuxinZou](https://github.com/YuxinZou)), Tianhe Wang([@DarthThomas](https://github.com/DarthThomas)), Hongxiang Cai ([@hxcai](http://github.com/hxcai)), Yichao Xiong ([@mileistone](https://github.com/mileistone)).
-
-## Credits
-We got a lot of code from [mmcv](https://github.com/open-mmlab/mmcv) and [mmdetection](https://github.com/open-mmlab/mmdetection), thanks to [open-mmlab](https://github.com/open-mmlab).
