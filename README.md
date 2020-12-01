@@ -217,7 +217,7 @@ python tools/inference.py configs/voc_unet.py checkpoint_path image_file_path --
 ```shell
 python tools/deploy/benchmark.py configs/voc_unet.py checkpoint_path image_file_path --calibration_images image_folder_path
 ```
-More available arguments are detailed in [tools/deploy/benchmark.py](https://github.com/Media-Smart/vedacls/blob/master/tools/deploy/benchmark.py)
+More available arguments are detailed in [tools/deploy/benchmark.py](https://github.com/Media-Smart/vedaseg/blob/master/tools/deploy/benchmark.py)
 
 The result of Unet is as follows（test device: Jetson AGX Xavier, CUDA:10.2）:
 
