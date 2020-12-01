@@ -208,7 +208,7 @@ python tools/inference.py configs/voc_unet.py checkpoint_path image_file_path --
 
 ## Deploy
 ### Known issues
-1. Currently only pspnet model is not supported due to `AdaptiveAvgPool2d`.
+1. Currently only PSPNet model is not supported due to `AdaptiveAvgPool2d`.
 2. Default onnx opset version is 9, PyTorch Upsample operation is only supported with specified size, nearest mode and align_corners being None under this version. Set `opset_version=11` in file `volksdep/converters/torch2onnx.py`, if bilinear mode and align_corners are wanted. 
 ### Usage
 1. Install volksdep following the [official instructions](https://github.com/Media-Smart/volksdep)
@@ -234,7 +234,7 @@ The result of Unet is as follows（test device: Jetson AGX Xavier, CUDA:10.2）:
 python tools/deploy/export.py configs/voc_unet.py checkpoint_path image_file_path out_model_path
 ```
 
-More available arguments are detailed in [tools/deploy/export.py](https://github.com/Media-Smart/vedacls/blob/master/tools/deploy/export.py)
+More available arguments are detailed in [tools/deploy/export.py](https://github.com/Media-Smart/vedaseg/blob/master/tools/deploy/export.py)
 
 4. Inference SDK
 
