@@ -1,4 +1,5 @@
 ## Introduction
+
 vedaseg is an open source semantic segmentation toolbox based on PyTorch.
 
 ## Features
@@ -207,38 +208,29 @@ python tools/inference.py configs/voc_unet.py checkpoint_path image_file_path --
 ```
 
 ## Deploy
-### Known issues
-1. Currently only PSPNet model is not supported due to `AdaptiveAvgPool2d`.
-2. Default onnx opset version is 9, PyTorch Upsample operation is only supported with specified size, nearest mode and align_corners being None under this version. Set `opset_version=11` in file `volksdep/converters/torch2onnx.py`, if bilinear mode and align_corners are wanted. 
-### Usage
-1. Install volksdep following the [official instructions](https://github.com/Media-Smart/volksdep)
 
-2. Benchmark(optional)
+1. Convert to Onnx
+
+Firstly, install volksdep following the [official instructions](https://github.com/Media-Smart/volksdep).
+
+Then, run the following code to convert PyTorch to Onnx. The input shape format is `CxHxW`. 
+If you need the onnx model with dynamic input shape, please add `--dynamic_shape` in the end.
+
 ```shell
-python tools/deploy/benchmark.py configs/voc_unet.py checkpoint_path image_file_path --calibration_images image_folder_path
-```
-More available arguments are detailed in [tools/deploy/benchmark.py](https://github.com/Media-Smart/vedaseg/blob/master/tools/deploy/benchmark.py)
-
-The result of Unet is as follows（test device: Jetson AGX Xavier, CUDA:10.2）:
-
-| framework  |  version   |     input shape      |         data type         |   throughput(FPS)    |   latency(ms)   |
-|   :---:    |    :---:   |       :---:          |          :---:            |         :---:        |      :---:      |
-|  pytorch   |   1.5.0    |   (1, 3, 513, 513)   |           fp32            |          5           |      180.8      |
-|  tensorrt  |  7.1.0.16  |   (1, 3, 513, 513)   |           fp32            |          9           |     103.53      |
-|  pytorch   |   1.5.0    |   (1, 3, 513, 513)   |           fp16            |          15          |      63.27      |
-|  tensorrt  |  7.1.0.16  |   (1, 3, 513, 513)   |           fp16            |          29          |      34.03      |
-|  tensorrt  |  7.1.0.16  |   (1, 3, 513, 513)   |      int8(entropy_2)      |          47          |      21.56      |
-
-3. Export model
-```shell
-python tools/deploy/export.py configs/voc_unet.py checkpoint_path image_file_path out_model_path
+python tools/torch2onnx.py configs/voc_unet.py weight_path out_path --dummy_input_shape 3,513,513 --opset_version 11
 ```
 
-More available arguments are detailed in [tools/deploy/export.py](https://github.com/Media-Smart/vedaseg/blob/master/tools/deploy/export.py)
+Here are some known issues:
+- Currently PSPNet model is not supported because of the unsupported operation `AdaptiveAvgPool2d`.
+- Default onnx opset version is 9 and PyTorch Upsample operation is only supported 
+with specified size, nearest mode and align_corners being None. 
+If bilinear mode and align_corners are wanted, please add `--opset_version 11` when using `torch2onnx.py`.
 
-4. Inference SDK
+2. Inference SDK
 
-You can refer to [FlexInfer](https://github.com/Media-Smart/flexinfer) for details.
+Firstly, install flexinfer following the [official instructions](https://github.com/Media-Smart/flexinfer).
+
+Then, see the [example](https://github.com/Media-Smart/flexinfer/tree/master/examples/segmentation) for details.
 
 ## Contact
 
