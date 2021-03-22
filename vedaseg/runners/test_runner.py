@@ -1,9 +1,9 @@
-import torch
 import numpy as np
+import torch
 import torch.nn.functional as F
 
-from .inference_runner import InferenceRunner
 from ..utils import gather_tensor
+from .inference_runner import InferenceRunner
 
 
 class TestRunner(InferenceRunner):
@@ -69,6 +69,10 @@ class TestRunner(InferenceRunner):
                 flip_output = self.model(flip_img)
                 prob = flip_output.flip(3)
                 probs.append(prob)
+
+        for idx, prob in enumerate(probs):
+            probs[idx] = F.interpolate(prob, size=(h, w),
+                                       mode='bilinear', align_corners=True)
 
         if self.multi_label:
             prob = torch.stack(probs, dim=0).sigmoid().mean(dim=0)
