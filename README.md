@@ -38,12 +38,12 @@ Note: All models are trained only on PASCAL VOC 2012 trainaug dataset and evalua
 | DeepLabv3plus | ResNet-101 | 16 | False | 77.90% |
 | DeepLabv3 | ResNet-101 | 16 | True | 79.22% |
 | DeepLabv3 | ResNet101 | 16 | False | 77.08% |
-| FPN | ResNet-101 | 2 | True | 76.19% |
-| FPN | ResNet-101 | 2 | False | 74.26% |
+| FPN | ResNet-101 | 4 | True | 77.05% |
+| FPN | ResNet-101 | 4 | False | 75.64% |
 | PSPNet | ResNet-101 | 8 | True | 74.83% |
 | PSPNet | ResNet-101 | 8 | False | 73.28% |
-| U-Net | ResNet-101 | 1 | True | 73.89% |
-| U-Net | ResNet-101 | 1 | False | 72.21% |
+| U-Net | ResNet-101 | 1 | True | 74.58% |
+| U-Net | ResNet-101 | 1 | False | 72.59% |
 
 OS: Output stride used during evaluation\
 MS: Multi-scale inputs during evaluation\
