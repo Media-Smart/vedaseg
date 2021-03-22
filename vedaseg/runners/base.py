@@ -1,17 +1,16 @@
+import numpy as np
 import os
 import random
-
 import torch
-import numpy as np
 from torch.backends import cudnn
 
-from ..loggers import build_logger
 from ..dataloaders import build_dataloader
 from ..dataloaders.samplers import build_sampler
 from ..datasets import build_dataset
-from ..transforms import build_transform
+from ..loggers import build_logger
 from ..metrics import build_metrics
-from ..utils import init_dist_pytorch, get_dist_info
+from ..transforms import build_transform
+from ..utils import get_dist_info, init_dist_pytorch
 
 
 class Common:

@@ -1,5 +1,5 @@
 from ...utils import build_from_cfg
-from .registry import NON_DISTRIBUTED_SAMPLERS, DISTRIBUTED_SAMPLERS
+from .registry import DISTRIBUTED_SAMPLERS, NON_DISTRIBUTED_SAMPLERS
 
 
 def build_sampler(distributed, cfg, default_args=None):

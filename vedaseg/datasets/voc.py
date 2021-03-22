@@ -1,8 +1,7 @@
-import logging
-import os
-
 import cv2
+import logging
 import numpy as np
+import os
 
 from .base import BaseDataset
 from .registry import DATASETS

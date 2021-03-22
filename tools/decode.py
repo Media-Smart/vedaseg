@@ -3,9 +3,8 @@
 # https://github.com/tensorflow/models/blob/master/research/deeplab/datasets/remove_gt_colormap.py
 
 import glob
-import os
-
 import numpy as np
+import os
 from PIL import Image
 
 

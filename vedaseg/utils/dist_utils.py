@@ -1,7 +1,6 @@
 # adapted from mmcv and mmdetection
 
 import os
-
 import torch
 import torch.distributed as dist
 

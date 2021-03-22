@@ -1,8 +1,7 @@
 # modify from mmcv and mmdetection
 
-import warnings
-
 import torch.nn as nn
+import warnings
 
 from .act import build_act_layer
 from .norm import build_norm_layer

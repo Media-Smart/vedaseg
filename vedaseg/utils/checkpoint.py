@@ -1,9 +1,7 @@
 # adapted from https://github.com/open-mmlab/mmcv
 import os
 import time
-
 import torch
-
 from collections import OrderedDict
 
 

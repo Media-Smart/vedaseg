@@ -1,5 +1,4 @@
 import logging
-
 import torch.nn as nn
 from torchvision.models.resnet import model_urls
 
@@ -10,10 +9,10 @@ except ImportError:
 
 from functools import partial
 
-from .registry import BACKBONES
-from ...weight_init import init_weights
-from ...utils.norm import build_norm_layer
 from ...utils.act import build_act_layer
+from ...utils.norm import build_norm_layer
+from ...weight_init import init_weights
+from .registry import BACKBONES
 
 logger = logging.getLogger()
 
