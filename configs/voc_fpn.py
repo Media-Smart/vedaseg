@@ -3,17 +3,37 @@ import cv2
 # 1. configuration for inference
 nclasses = 21
 ignore_label = 255
-image_pad_value = (123.675, 116.280, 103.530)
-crop_size_h, crop_size_w = 513, 513
-test_size_h, test_size_w = 513, 513
-img_norm_cfg = dict(mean=(0.485, 0.456, 0.406),
-                    std=(0.229, 0.224, 0.225),
-                    max_pixel_value=255.0)
-norm_cfg = dict(type='BN')
 multi_label = False
 
+crop_size_h, crop_size_w = 513, 513
+test_size_h, test_size_w = 513, 513
+image_pad_value = (123.675, 116.280, 103.530)
+
+img_norm_cfg = dict(
+    max_pixel_value=255.0,
+    std=(0.229, 0.224, 0.225),
+    mean=(0.485, 0.456, 0.406),
+)
+norm_cfg = dict(type='BN')
+fpn_post = dict(
+    type='ConvModule',
+    in_channels=256,
+    out_channels=256,
+    kernel_size=3,
+    padding=1,
+    norm_cfg=None,
+    act_cfg=None,
+)
+fpn_upsample_2x = dict(
+    type='Upsample',
+    scale_factor=2,
+    scale_bias=-1,
+    mode='bilinear',
+    align_corners=True,
+)
+
 inference = dict(
-    gpu_id='0,1',
+    gpu_id='0, 1',
     transforms=[
         dict(type='PadIfNeeded', min_height=test_size_h, min_width=test_size_w,
              value=image_pad_value, mask_value=ignore_label),
@@ -25,7 +45,7 @@ inference = dict(
         encoder=dict(
             backbone=dict(
                 type='ResNet',
-                arch='resnet101'
+                arch='resnet101',
             ),
         ),
         # model/decoder
@@ -33,132 +53,53 @@ inference = dict(
             type='GFPN',
             # model/decoder/blocks
             neck=[
-                # model/decoder/blocks/block1
+                # FPN - connection to m5
                 dict(
                     type='JunctionBlock',
-                    top_down=None,
-                    lateral=dict(
-                        from_layer='c5',
-                        type='ConvModule',
-                        in_channels=2048,
-                        out_channels=256,
-                        kernel_size=1,
-                        norm_cfg=None,
-                        act_cfg=None,
-                    ),
-                    post=dict(
-                        type='ConvModule',
-                        in_channels=256,
-                        out_channels=256,
-                        kernel_size=3,
-                        padding=1,
-                        norm_cfg=None,
-                        act_cfg=None,
-                    ),
-                    to_layer='p5',
-                ),  # 32
-                # model/decoder/blocks/block2
-                dict(
-                    type='JunctionBlock',
-                    fusion_method='add',
-                    top_down=dict(
-                        from_layer='p5',
-                        upsample=dict(
-                            type='Upsample',
-                            scale_factor=2,
-                            scale_bias=-1,
-                            mode='bilinear',
-                            align_corners=True,
+                    laterals=[
+                        dict(
+                            from_layer='c5',
+                            type='ConvModule',
+                            in_channels=2048,
+                            out_channels=256,
+                            kernel_size=1,
+                            norm_cfg=None,
+                            act_cfg=None,
                         ),
-                    ),
-                    lateral=dict(
-                        from_layer='c4',
-                        type='ConvModule',
-                        in_channels=1024,
-                        out_channels=256,
-                        kernel_size=1,
-                        norm_cfg=None,
-                        act_cfg=None
-                    ),
-                    post=dict(
-                        type='ConvModule',
-                        in_channels=256,
-                        out_channels=256,
-                        kernel_size=3,
-                        padding=1,
-                        norm_cfg=None,
-                        act_cfg=None,
-                    ),
-                    to_layer='p4',
-                ),  # 16
-                # model/decoder/blocks/block3
-                dict(
-                    type='JunctionBlock',
-                    fusion_method='add',
-                    top_down=dict(
-                        from_layer='p4',
-                        upsample=dict(
-                            type='Upsample',
-                            scale_factor=2,
-                            scale_bias=-1,
-                            mode='bilinear',
-                            align_corners=True,
-                        ),
-                    ),
-                    lateral=dict(
-                        from_layer='c3',
-                        type='ConvModule',
-                        in_channels=512,
-                        out_channels=256,
-                        kernel_size=1,
-                        norm_cfg=None,
-                        act_cfg=None,
-                    ),
-                    post=dict(
-                        type='ConvModule',
-                        in_channels=256,
-                        out_channels=256,
-                        kernel_size=3,
-                        padding=1,
-                        norm_cfg=None,
-                        act_cfg=None
-                    ),
-                    to_layer='p3',
-                ),  # 8
-                # model/decoder/blocks/block2
-                dict(
-                    type='JunctionBlock',
-                    fusion_method='add',
-                    top_down=dict(
-                        from_layer='p3',
-                        upsample=dict(
-                            type='Upsample',
-                            scale_factor=2,
-                            scale_bias=-1,
-                            mode='bilinear',
-                            align_corners=True,
-                        ),
-                    ),
-                    lateral=dict(
-                        from_layer='c2',
-                        type='ConvModule',
-                        in_channels=256,
-                        out_channels=256,
-                        kernel_size=1,
-                        norm_cfg=None,
-                        act_cfg=None,
-                    ),
-                    post=dict(
-                        type='ConvModule',
-                        in_channels=256,
-                        out_channels=256,
-                        kernel_size=3,
-                        padding=1,
-                        norm_cfg=None,
-                        act_cfg=None,
-                    ),
-                    to_layer='p2',
-                ),  # 4
+                    ],
+                    to_layer='m5',
+                ),
+                # FPN - connections to m4~m2
+                *[
+                    dict(
+                        type='JunctionBlock',
+                        fusion_method='add',
+                        verticals=[
+                            {'from_layer': f'm{idx + 1}', **fpn_upsample_2x}
+                        ],
+                        laterals=[
+                            dict(
+                                from_layer=f'c{idx}',
+                                type='ConvModule',
+                                in_channels=2 ** (idx + 6),
+                                out_channels=256,
+                                kernel_size=1,
+                                norm_cfg=None,
+                                act_cfg=None,
+                            ),
+                        ],
+                        to_layer=f'm{idx}',
+                    ) for idx in range(4, 1, -1)
+                ],
+                # FPN - connections from m to p
+                *[
+                    dict(
+                        type='JunctionBlock',
+                        laterals=[{'from_layer': f'm{idx}', **fpn_post}],
+                        to_layer=f'p{idx}',
+                    ) for idx in range(5, 1, -1)
+                ],  # 4
+
             ],
             fusion=dict(
                 type='FusionBlock',
@@ -193,8 +134,8 @@ inference = dict(
                 mode='bilinear',
                 align_corners=True,
             ),
-        )
-    )
+        ),
+    ),
 )
 
 # 2. configuration for train/test
@@ -263,13 +204,13 @@ train = dict(
             transforms=[
                 dict(type='RandomScale', scale_limit=(0.5, 2),
                      interpolation=cv2.INTER_LINEAR),
-                dict(type='PadIfNeeded', min_height=crop_size_h, min_width=crop_size_w,
-                     value=image_pad_value, mask_value=ignore_label),
+                dict(type='PadIfNeeded', min_height=crop_size_h,
+                     min_width=crop_size_w, value=image_pad_value,
+                     mask_value=ignore_label),
                 dict(type='RandomCrop', height=crop_size_h, width=crop_size_w),
                 dict(type='Rotate', limit=10, interpolation=cv2.INTER_LINEAR,
-                     border_mode=cv2.BORDER_CONSTANT,
-                     value=image_pad_value, mask_value=ignore_label, p=0.5
-                     ),
+                     border_mode=cv2.BORDER_CONSTANT, value=image_pad_value,
+                     mask_value=ignore_label, p=0.5),
                 dict(type='GaussianBlur', blur_limit=7, p=0.5),
                 dict(type='HorizontalFlip', p=0.5),
                 dict(type='Normalize', **img_norm_cfg),

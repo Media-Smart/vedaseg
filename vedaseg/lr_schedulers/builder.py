@@ -1,6 +1,6 @@
 from torch.optim import lr_scheduler
-from vedaseg.utils import build_from_cfg
 
+from vedaseg.utils import build_from_cfg
 from .registry import LR_SCHEDULERS
 
 

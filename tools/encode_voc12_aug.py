@@ -1,7 +1,6 @@
 import glob
-import os
-
 import numpy as np
+import os
 import scipy.io as io
 from PIL import Image
 

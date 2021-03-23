@@ -1,6 +1,6 @@
 from ..utils import build_from_cfg
-from .registry import METRICS
 from .metrics import Compose
+from .registry import METRICS
 
 
 def build_metrics(cfg):

@@ -1,10 +1,9 @@
+import cv2
+import json
 import logging
+import numpy as np
 import os
 from collections import defaultdict
-
-import cv2
-import numpy as np
-import json
 
 from vedaseg.datasets.base import BaseDataset
 from .registry import DATASETS

@@ -1,5 +1,5 @@
-from .registry import DATALOADERS
 from ..utils import build_from_cfg
+from .registry import DATALOADERS
 
 
 def build_dataloader(distributed, num_gpus, cfg, default_args=None):

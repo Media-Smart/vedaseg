@@ -1,3 +1,3 @@
 from .builder import build_transform
-from .transforms import FactorScale, LongestMaxSize, \
-                        RandomScale, PadIfNeeded, ToTensor
+from .transforms import (FactorScale, LongestMaxSize, PadIfNeeded, RandomScale,
+                         ToTensor)

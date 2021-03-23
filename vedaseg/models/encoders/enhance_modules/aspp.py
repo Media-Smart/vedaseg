@@ -1,16 +1,15 @@
 # modify from https://github.com/pytorch/vision/tree/master/torchvision/models/segmentation/deeplabv3.py
 
 import logging
-from functools import partial
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from functools import partial
 
-from .registry import ENHANCE_MODULES
 from ...utils.act import build_act_layer
 from ...utils.norm import build_norm_layer
 from ...weight_init import init_weights
+from .registry import ENHANCE_MODULES
 
 logger = logging.getLogger()
 

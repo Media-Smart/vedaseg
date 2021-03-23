@@ -1,12 +1,10 @@
 # adapted from https://github.com/open-mmlab/mmcv
-import sys
+import collections
 import os.path as osp
+import sys
+from addict import Dict
 from argparse import ArgumentParser
 from importlib import import_module
-
-from addict import Dict
-
-import collections
 
 if sys.version_info < (3, 3):
     Sequence = collections.Sequence

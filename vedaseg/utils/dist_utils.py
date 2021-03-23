@@ -1,7 +1,6 @@
 # adapted from mmcv and mmdetection
 
 import os
-
 import torch
 import torch.distributed as dist
 
@@ -54,7 +53,9 @@ def gather_tensor(data):
 
         gather_list = [torch.ones_like(data) for _ in range(world_size)]
         dist.all_gather(gather_list, data)
-        gather_data = torch.cat(gather_list, 0)
+        gather_data = torch.stack(gather_list)
+        gather_data = torch.transpose(gather_data, 0, 1)
+        gather_data = gather_data.reshape((-1, *gather_data.shape[2:]))
 
     return gather_data
 

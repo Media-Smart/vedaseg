@@ -1,14 +1,13 @@
+import numpy as np
 import os
+import torch
 from collections import OrderedDict
 from collections.abc import Iterable
 
-import torch
-import numpy as np
-
-from ..optims import build_optimizer
 from ..criteria import build_criterion
 from ..lr_schedulers import build_lr_scheduler
-from ..utils import save_checkpoint, gather_tensor, reduce_tensor
+from ..optims import build_optimizer
+from ..utils import gather_tensor, reduce_tensor, save_checkpoint
 from .inference_runner import InferenceRunner
 
 

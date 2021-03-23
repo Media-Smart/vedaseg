@@ -3,17 +3,21 @@ import cv2
 # 1. configuration for inference
 nclasses = 21
 ignore_label = 255
-image_pad_value = (123.675, 116.280, 103.530)
-crop_size_h, crop_size_w = 513, 513
-test_size_h, test_size_w = 513, 513
-img_norm_cfg = dict(mean=(0.485, 0.456, 0.406),
-                    std=(0.229, 0.224, 0.225),
-                    max_pixel_value=255.0)
-norm_cfg = dict(type='BN')
 multi_label = False
 
+crop_size_h, crop_size_w = 513, 513
+test_size_h, test_size_w = 513, 513
+image_pad_value = (123.675, 116.280, 103.530)
+
+img_norm_cfg = dict(
+    max_pixel_value=255.0, 
+    std=(0.229, 0.224, 0.225),
+    mean=(0.485, 0.456, 0.406),
+)
+norm_cfg = dict(type='BN')
+
 inference = dict(
-    gpu_id='0,1',
+    gpu_id='0, 1',
     multi_label=multi_label,
     transforms=[
         dict(type='PadIfNeeded', min_height=test_size_h, min_width=test_size_w,
@@ -53,26 +57,27 @@ inference = dict(
                 dict(
                     type='JunctionBlock',
                     fusion_method='concat',
-                    top_down=dict(
-                        from_layer='enhance',
-                        upsample=dict(
+                    verticals=[
+                        dict(
+                            from_layer='enhance',
                             type='Upsample',
                             scale_factor=4,
                             scale_bias=-3,
                             mode='bilinear',
                             align_corners=True,
                         ),
-                    ),
-                    lateral=dict(
-                        from_layer='c2',
-                        type='ConvModule',
-                        in_channels=256,
-                        out_channels=48,
-                        kernel_size=1,
-                        norm_cfg=norm_cfg,
-                        act_cfg=dict(type='Relu', inplace=True),
-                    ),
-                    post=None,
+                    ],
+                    laterals=[
+                        dict(
+                            from_layer='c2',
+                            type='ConvModule',
+                            in_channels=256,
+                            out_channels=48,
+                            kernel_size=1,
+                            norm_cfg=norm_cfg,
+                            act_cfg=dict(type='Relu', inplace=True),
+                        ),
+                    ],
                     to_layer='p5',
                 ),  # 4
             ],
@@ -115,7 +120,7 @@ common = dict(
         dict(type='IoU', num_classes=nclasses),
         dict(type='MIoU', num_classes=nclasses, average='equal'),
     ],
-    dist_params=dict(backend='nccl')
+    dist_params=dict(backend='nccl'),
 )
 
 ## 2.1 configuration for test
@@ -162,8 +167,9 @@ train = dict(
             transforms=[
                 dict(type='RandomScale', scale_limit=(0.5, 2), scale_step=0.25,
                      interpolation=cv2.INTER_LINEAR),
-                dict(type='PadIfNeeded', min_height=crop_size_h, min_width=crop_size_w,
-                     value=image_pad_value, mask_value=ignore_label),
+                dict(type='PadIfNeeded', min_height=crop_size_h,
+                     min_width=crop_size_w, value=image_pad_value,
+                     mask_value=ignore_label),
                 dict(type='RandomCrop', height=crop_size_h, width=crop_size_w),
                 dict(type='HorizontalFlip', p=0.5),
                 dict(type='Normalize', **img_norm_cfg),

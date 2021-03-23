@@ -1,9 +1,7 @@
 import torch.nn as nn
 
-
 # from .decoders import build_brick
-from vedaseg.models.decoders import build_brick
-from vedaseg.models.decoders import build_decoder
+from vedaseg.models.decoders import build_brick, build_decoder
 from vedaseg.models.encoders import build_encoder
 from vedaseg.models.heads import build_head
 
