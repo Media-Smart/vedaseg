@@ -228,9 +228,7 @@ If bilinear mode and align_corners are wanted, please add `--opset_version 11` w
 
 2. Inference SDK
 
-Firstly, install flexinfer following the [official instructions](https://github.com/Media-Smart/flexinfer).
-
-Then, see the [example](https://github.com/Media-Smart/flexinfer/tree/master/examples/segmentation) for details.
+Firstly, install [flexinfer](https://github.com/Media-Smart/flexinfer) and see the [example](https://github.com/Media-Smart/flexinfer/tree/master/examples/segmentation) for details.
 
 ## Contact
 
