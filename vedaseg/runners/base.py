@@ -61,7 +61,7 @@ class Common:
         return use_gpu
 
     def _set_seed(self, seed):
-        if seed:
+        if seed is not None:
             self.logger.info('Set seed {}'.format(seed))
             random.seed(seed)
             np.random.seed(seed)
