@@ -16,6 +16,17 @@ from .registry import BACKBONES
 
 logger = logging.getLogger()
 
+model_urls.update(
+    {
+        "resnet18_v1c": "https://download.openmmlab.com/pretrain/third_party/"
+                        "resnet18_v1c-b5776b93.pth",
+        "resnet50_v1c": "https://download.openmmlab.com/pretrain/third_party/"
+                        "resnet50_v1c-2cccc1ad.pth",
+        "resnet101_v1c": "https://download.openmmlab.com/pretrain/third_party/"
+                         "resnet101_v1c-e67eebb6.pth",
+    }
+)
+
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -123,17 +134,14 @@ MODEL_CFGS = {
     'resnet101': {
         'block': Bottleneck,
         'layer': [3, 4, 23, 3],
-        'weights_url': model_urls['resnet101'],
     },
     'resnet50': {
         'block': Bottleneck,
         'layer': [3, 4, 6, 3],
-        'weights_url': model_urls['resnet50'],
     },
     'resnet18': {
         'block': BasicBlock,
         'layer': [2, 2, 2, 2],
-        'weights_url': model_urls['resnet18'],
     }
 }
 
@@ -144,7 +152,7 @@ class ResNetCls(nn.Module):
                  zero_init_residual=False,
                  groups=1, width_per_group=64,
                  replace_stride_with_dilation=None, multi_grid=None,
-                 norm_cfg=None, act_cfg=None):
+                 norm_cfg=None, act_cfg=None, deep_stem=False):
         super(ResNetCls, self).__init__()
 
         if norm_cfg is None:
@@ -155,6 +163,7 @@ class ResNetCls(nn.Module):
             act_cfg = dict(type='Relu', inplace=True)
         self._act_layer = partial(build_act_layer, act_cfg, layer_only=True)
 
+        self.deep_stem = deep_stem
         self.inplanes = 64
         self.dilation = 1
         if replace_stride_with_dilation is None:
@@ -162,18 +171,14 @@ class ResNetCls(nn.Module):
             # the 2x2 stride with a dilated convolution instead
             replace_stride_with_dilation = [False, False, False]
         if len(replace_stride_with_dilation) != 3:
-            raise ValueError("replace_stride_with_dilation should be None "
-                             "or a 3-element tuple, got {}".format(
-                replace_stride_with_dilation))
+            raise ValueError(
+                'replace_stride_with_dilation should be None or a 3-element '
+                'tuple, got {}'.format(replace_stride_with_dilation)
+            )
 
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2,
-                               padding=3,
-                               bias=False)
-        self.bn1 = self._norm_layer(self.inplanes)
-        self.relu1 = self._act_layer(self.inplanes)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self._make_stem_layer()
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
                                        dilate=replace_stride_with_dilation[0])
@@ -227,10 +232,9 @@ class ResNetCls(nn.Module):
                 norm_layer(planes * block.expansion),
             )
 
-        layers = []
-        layers.append(block(self.inplanes, planes, norm_layer, act_layer,
-                            stride, downsample, self.groups,
-                            self.base_width, previous_dilation * multi_grid[0]))
+        layers = [block(self.inplanes, planes, norm_layer, act_layer,
+                        stride, downsample, self.groups, self.base_width,
+                        previous_dilation * multi_grid[0])]
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
             layers.append(block(self.inplanes, planes, norm_layer=norm_layer,
@@ -241,10 +245,40 @@ class ResNetCls(nn.Module):
 
         return nn.Sequential(*layers)
 
+    def _make_stem_layer(self):
+        """Make stem layer for ResNet."""
+        if self.deep_stem:
+            self.stem = nn.Sequential(
+                nn.Conv2d(3, self.inplanes // 2,
+                          kernel_size=3, stride=2, padding=1, bias=False),
+                self._norm_layer(self.inplanes // 2),
+                self._act_layer(self.inplanes // 2),
+
+                nn.Conv2d(self.inplanes // 2, self.inplanes // 2,
+                          kernel_size=3, stride=1, padding=1, bias=False),
+                self._norm_layer(self.inplanes // 2),
+                self._act_layer(self.inplanes // 2),
+
+                nn.Conv2d(self.inplanes // 2, self.inplanes,
+                          kernel_size=3, stride=1, padding=1, bias=False),
+                self._norm_layer(self.inplanes),
+                self._act_layer(self.inplanes),
+            )
+        else:
+            self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2,
+                                   padding=3, bias=False)
+            self.bn1 = self._norm_layer(self.inplanes)
+            self.relu1 = self._act_layer(self.inplanes)
+
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu1(x)
+        if self.deep_stem:
+            x = self.stem(x)
+        else:
+            x = self.conv1(x)
+            x = self.bn1(x)
+            x = self.relu1(x)
         x = self.maxpool(x)
 
         x = self.layer1(x)
@@ -267,21 +301,27 @@ class ResNet(ResNetCls):
         pretrain(bool)
     """
 
-    def __init__(self, arch, replace_stride_with_dilation=None, multi_grid=None,
-                 pretrain=True,
-                 norm_cfg=None, act_cfg=None):
-        cfg = MODEL_CFGS[arch]
+    def __init__(self, arch, replace_stride_with_dilation=None,
+                 multi_grid=None, pretrain=True, norm_cfg=None, act_cfg=None):
+        cfg = MODEL_CFGS[arch[:-4] if arch.endswith('_v1c') else arch]
+
         super().__init__(
             cfg['block'],
             cfg['layer'],
             replace_stride_with_dilation=replace_stride_with_dilation,
+            deep_stem=arch.endswith('_v1c'),
             multi_grid=multi_grid,
             norm_cfg=norm_cfg,
             act_cfg=act_cfg)
 
         if pretrain:
             logger.info('ResNet init weights from pretreain')
-            state_dict = load_state_dict_from_url(cfg['weights_url'])
+            if arch not in model_urls:
+                raise KeyError('No model url exist for {}'.format(arch))
+            state_dict = load_state_dict_from_url(model_urls[arch])
+            if 'state_dict' in state_dict:
+                # handle state_dict format from mmseg
+                state_dict = state_dict['state_dict']
             self.load_state_dict(state_dict, strict=False)
         else:
             logger.info('ResNet init weights')
@@ -291,10 +331,12 @@ class ResNet(ResNetCls):
 
     def forward(self, x):
         feats = {}
-
-        x0 = self.conv1(x)
-        x0 = self.bn1(x0)
-        x0 = self.relu1(x0)  # 2
+        if self.deep_stem:
+            x0 = self.stem(x)
+        else:
+            x0 = self.conv1(x)
+            x0 = self.bn1(x0)
+            x0 = self.relu1(x0)
         feats['c1'] = x0
 
         x1 = self.maxpool(x0)
