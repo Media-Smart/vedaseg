@@ -164,13 +164,14 @@ data
 
 1. Config
 
-Modify some configuration accordingly in the config file like `configs/voc_unet.py`.
+Modify configuration files in [configs/](configs) according to your needs(e.g. [configs/voc_unet.py](configs/voc_unet.py)).
 
-for multi-label training use config file `configs/coco_multilabel_unet.py` and modify some configuration, the difference between single-label and multi-label training are mainly in following parameter in config file: `nclasses`, `multi_label`, `metrics` and `criterion`. Currently multi-label training is only supported in COCO data format.
+The major configuration difference between single-label and multi-label training lies in: `nclasses`, `multi_label`, `metrics`and `criterion`. You can take [configs/coco_multilabel_unet.py](configs/coco_multilabel_unet.py) as a reference. Currently, multi-label training is only supported in COCO data format.
 
 2. Ditributed training
 ```shell
-./tools/dist_train.sh configs/voc_unet.py gpu_num
+# train pspnet using GPUs with gpu_id 0, 1, 2, 3
+./tools/dist_train.sh configs/voc_pspnet.py "0, 1, 2, 3" 
 ```
 
 3. Non-distributed training
@@ -178,29 +179,30 @@ for multi-label training use config file `configs/coco_multilabel_unet.py` and m
 python tools/train.py configs/voc_unet.py
 ```
 
-Snapshots and logs will be generated at `${vedaseg_root}/workdir`.
+Snapshots and logs by default will be generated at `${vedaseg_root}/workdir`(you can specify workdir in config files).
 
 ## Test
 
 1. Config
 
-Modify some configuration accordingly in the config file like `configs/voc_unet.py`
+Modify configuration as you wish(e.g. [configs/voc_unet.py](configs/voc_unet.py)).
 
 2. Ditributed testing
 ```shell
-./tools/dist_test.sh configs/voc_unet.py checkpoint_path gpu_num
+# test pspnet using GPUs with gpu_id 0, 1, 2, 3
+./tools/dist_test.sh configs/voc_pspnet.py path/to/checkpoint.pth "0, 1, 2, 3" 
 ```
 
 3. Non-distributed testing
 ```shell
-python tools/test.py configs/voc_unet.py checkpoint_path
+python tools/test.py configs/voc_unet.py path/to/checkpoint.pth
 ```
 
 ## Inference
 
 1. Config
 
-Modify some configuration accordingly in the config file like `configs/voc_unet.py`.
+Modify configuration as you wish(e.g. [configs/voc_unet.py](configs/voc_unet.py)).
 
 2. Run
 
