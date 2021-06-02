@@ -18,7 +18,6 @@ norm_cfg = dict(type='SyncBN')
 
 
 inference = dict(
-    gpu_id='0, 1, 2, 3',
     multi_label=multi_label,
     transforms=[
         dict(type='PadIfNeeded', min_height=crop_size_h, min_width=crop_size_w,
