@@ -47,12 +47,11 @@ Note: All models are trained only on PASCAL VOC 2012 trainaug dataset and evalua
 | U-Net | ResNet-101 | 1 | True | 74.58% |
 | U-Net | ResNet-101 | 1 | False | 72.59% |
 
-OS: Output stride used during evaluation\
-MS: Multi-scale inputs during evaluation\
-Flip: Adding horizontal flipped inputs during evaluation\
+OS: Output stride used during evaluation.\
+MS: Multi-scale inputs during evaluation.\
+Flip: Adding horizontal flipped inputs during evaluation.\
 ResNet_v1c: Modified stem from original ResNet, as shown in [Figure 2(b) in 
-this paper](https://arxiv.org/pdf/1812.01187.pdf) (we borrowed pretrain 
-backbone weights from [mmlab](https://github.com/open-mmlab/mmsegmentation/blob/master/docs/model_zoo.md) )
+this paper](https://arxiv.org/pdf/1812.01187.pdf).
 
 Models above are available in the [GoogleDrive](https://drive.google.com/drive/folders/1ooIOX5Aeu-0aHJYT1eZgzkSnZUvPi2by).
 
@@ -165,8 +164,9 @@ data
 
 1. Config
 
-Modify some configuration accordingly in the config file like `configs/voc_unet.py`
-* for multi-label training use config file `configs/coco_multilabel_unet.py` and modify some configuration, the difference between single-label and multi-label training are mainly in following parameter in config file: `nclasses`, `multi_label`, `metrics` and `criterion`. Currently multi-label training is only supported in coco data format.
+Modify some configuration accordingly in the config file like `configs/voc_unet.py`.
+
+for multi-label training use config file `configs/coco_multilabel_unet.py` and modify some configuration, the difference between single-label and multi-label training are mainly in following parameter in config file: `nclasses`, `multi_label`, `metrics` and `criterion`. Currently multi-label training is only supported in COCO data format.
 
 2. Ditributed training
 ```shell
@@ -200,7 +200,7 @@ python tools/test.py configs/voc_unet.py checkpoint_path
 
 1. Config
 
-Modify some configuration accordingly in the config file like `configs/voc_unet.py`
+Modify some configuration accordingly in the config file like `configs/voc_unet.py`.
 
 2. Run
 
@@ -214,12 +214,12 @@ python tools/inference.py configs/voc_unet.py checkpoint_path image_file_path --
 
 ## Deploy
 
-1. Convert to Onnx
+1. Convert to ONNX
 
 Firstly, install volksdep following the [official instructions](https://github.com/Media-Smart/volksdep).
 
-Then, run the following code to convert PyTorch to Onnx. The input shape format is `CxHxW`. 
-If you need the onnx model with dynamic input shape, please add `--dynamic_shape` in the end.
+Then, run the following code to convert PyTorch to ONNX. The input shape format is `CxHxW`. 
+If you need the ONNX model with dynamic input shape, please add `--dynamic_shape` in the end.
 
 ```shell
 python tools/torch2onnx.py configs/voc_unet.py weight_path out_path --dummy_input_shape 3,513,513 --opset_version 11
@@ -227,7 +227,7 @@ python tools/torch2onnx.py configs/voc_unet.py weight_path out_path --dummy_inpu
 
 Here are some known issues:
 - Currently PSPNet model is not supported because of the unsupported operation `AdaptiveAvgPool2d`.
-- Default onnx opset version is 9 and PyTorch Upsample operation is only supported 
+- Default ONNX opset version is 9 and PyTorch Upsample operation is only supported 
 with specified size, nearest mode and align_corners being None. 
 If bilinear mode and align_corners are wanted, please add `--opset_version 11` when using `torch2onnx.py`.
 
