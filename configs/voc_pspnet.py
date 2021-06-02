@@ -14,7 +14,7 @@ img_norm_cfg = dict(
     std=(0.229, 0.224, 0.225),
     mean=(0.485, 0.456, 0.406),
 )
-norm_cfg = dict(type='BN')
+norm_cfg = dict(type='SyncBN')
 
 
 inference = dict(

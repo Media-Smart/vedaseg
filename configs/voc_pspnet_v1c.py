@@ -16,11 +16,12 @@ img_norm_cfg = dict(
 )
 norm_cfg = dict(type='SyncBN')
 
+
 inference = dict(
-    gpu_id='0, 1',
+    gpu_id='0, 1, 2, 3',
     multi_label=multi_label,
     transforms=[
-        dict(type='PadIfNeeded', min_height=test_size_h, min_width=test_size_w,
+        dict(type='PadIfNeeded', min_height=crop_size_h, min_width=crop_size_w,
              value=image_pad_value, mask_value=ignore_label),
         dict(type='Normalize', **img_norm_cfg),
         dict(type='ToTensor'),
@@ -30,75 +31,41 @@ inference = dict(
         encoder=dict(
             backbone=dict(
                 type='ResNet',
-                arch='resnet101',
-                replace_stride_with_dilation=[False, False, True],
-                multi_grid=[1, 2, 4],
+                arch='resnet101_v1c',
+                replace_stride_with_dilation=[False, True, True],
                 norm_cfg=norm_cfg,
             ),
             enhance=dict(
-                type='ASPP',
+                type='PPM',
                 from_layer='c5',
                 to_layer='enhance',
                 in_channels=2048,
-                out_channels=256,
-                atrous_rates=[6, 12, 18],
+                out_channels=512,
+                bins=[1, 2, 3, 6],
                 mode='bilinear',
                 align_corners=True,
                 norm_cfg=norm_cfg,
-                dropout=0.1,
             ),
         ),
-        # model/decoder
-        decoder=dict(
-            type='GFPN',
-            # model/decoder/blocks
-            neck=[
-                # model/decoder/blocks/block1
-                dict(
-                    type='JunctionBlock',
-                    fusion_method='concat',
-                    verticals=[
-                        dict(
-                            from_layer='enhance',
-                            type='Upsample',
-                            scale_factor=4,
-                            scale_bias=-3,
-                            mode='bilinear',
-                            align_corners=True,
-                        ),
-                    ],
-                    laterals=[
-                        dict(
-                            from_layer='c2',
-                            type='ConvModule',
-                            in_channels=256,
-                            out_channels=48,
-                            kernel_size=1,
-                            norm_cfg=norm_cfg,
-                            act_cfg=dict(type='Relu', inplace=True),
-                        ),
-                    ],
-                    to_layer='p5',
-                ),  # 4
-            ],
-        ),
+        collect=dict(type='CollectBlock', from_layer='enhance'),
         # model/head
         head=dict(
             type='Head',
-            in_channels=304,
-            inter_channels=256,
+            in_channels=4096,
+            inter_channels=512,
             out_channels=nclasses,
             norm_cfg=norm_cfg,
-            num_convs=2,
+            num_convs=1,
+            dropouts=[0.1],
             upsample=dict(
                 type='Upsample',
-                scale_factor=4,
-                scale_bias=-3,
+                scale_factor=8,
+                scale_bias=-7,
                 mode='bilinear',
                 align_corners=True,
             ),
-        )
-    )
+        ),
+    ),
 )
 
 # 2. configuration for train/test
@@ -165,12 +132,16 @@ train = dict(
                 multi_label=multi_label,
             ),
             transforms=[
-                dict(type='RandomScale', scale_limit=(0.5, 2), scale_step=0.25,
+                dict(type='RandomScale', scale_limit=(0.5, 2),
                      interpolation=cv2.INTER_LINEAR),
                 dict(type='PadIfNeeded', min_height=crop_size_h,
                      min_width=crop_size_w, value=image_pad_value,
                      mask_value=ignore_label),
                 dict(type='RandomCrop', height=crop_size_h, width=crop_size_w),
+                dict(type='Rotate', limit=10, interpolation=cv2.INTER_LINEAR,
+                     border_mode=cv2.BORDER_CONSTANT, value=image_pad_value,
+                     mask_value=ignore_label, p=0.5),
+                dict(type='GaussianBlur', blur_limit=7, p=0.5),
                 dict(type='HorizontalFlip', p=0.5),
                 dict(type='Normalize', **img_norm_cfg),
                 dict(type='ToTensor'),
@@ -180,7 +151,7 @@ train = dict(
             ),
             dataloader=dict(
                 type='DataLoader',
-                samples_per_gpu=8,
+                samples_per_gpu=4,
                 workers_per_gpu=4,
                 shuffle=True,
                 drop_last=True,
@@ -200,7 +171,7 @@ train = dict(
             ),
             dataloader=dict(
                 type='DataLoader',
-                samples_per_gpu=8,
+                samples_per_gpu=4,
                 workers_per_gpu=4,
                 shuffle=False,
                 drop_last=False,
@@ -210,7 +181,7 @@ train = dict(
     ),
     resume=None,
     criterion=dict(type='CrossEntropyLoss', ignore_index=ignore_label),
-    optimizer=dict(type='SGD', lr=0.007, momentum=0.9, weight_decay=0.0001),
+    optimizer=dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001),
     lr_scheduler=dict(type='PolyLR', max_epochs=max_epochs),
     max_epochs=max_epochs,
     trainval_ratio=1,
