@@ -1,5 +1,4 @@
 import numpy as np
-import os
 import random
 import torch
 from torch.backends import cudnn
@@ -25,7 +24,7 @@ class Common:
         self.distribute = cfg.get('distribute', False)
 
         # set gpu devices
-        self.use_gpu = self._set_device(cfg.get('gpu_id', ''))
+        self.use_gpu = self._set_device()
 
         # set distribute setting
         if self.distribute and self.use_gpu:
@@ -50,8 +49,7 @@ class Common:
     def _build_logger(self, cfg):
         return build_logger(cfg, dict(workdir=self.workdir))
 
-    def _set_device(self, gpu_id):
-        os.environ['CUDA_VISIBLE_DEVICES'] = gpu_id
+    def _set_device(self):
         self.gpu_num = torch.cuda.device_count()
         if torch.cuda.is_available():
             use_gpu = True
