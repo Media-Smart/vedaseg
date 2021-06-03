@@ -33,7 +33,6 @@ fpn_upsample_2x = dict(
 )
 
 inference = dict(
-    gpu_id='0, 1',
     transforms=[
         dict(type='PadIfNeeded', min_height=test_size_h, min_width=test_size_w,
              value=image_pad_value, mask_value=ignore_label),

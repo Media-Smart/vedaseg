@@ -10,7 +10,6 @@ class InferenceRunner(Common):
         inference_cfg = inference_cfg.copy()
         base_cfg = {} if base_cfg is None else base_cfg.copy()
 
-        base_cfg['gpu_id'] = inference_cfg.pop('gpu_id')
         super().__init__(base_cfg)
 
         self.multi_label = inference_cfg.get('multi_label', False)

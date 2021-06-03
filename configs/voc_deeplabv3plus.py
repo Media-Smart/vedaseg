@@ -17,7 +17,6 @@ img_norm_cfg = dict(
 norm_cfg = dict(type='SyncBN')
 
 inference = dict(
-    gpu_id='0, 1',
     multi_label=multi_label,
     transforms=[
         dict(type='PadIfNeeded', min_height=test_size_h, min_width=test_size_w,
