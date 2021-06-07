@@ -179,7 +179,7 @@ The major configuration difference between single-label and multi-label training
 python tools/train.py configs/voc_unet.py
 ```
 
-Snapshots and logs by default will be generated at `${vedaseg_root}/workdir`(you can specify workdir in config files).
+Snapshots and logs by default will be generated at `${vedaseg_root}/workdir/name_of_config_file`(you can specify workdir in config files).
 
 ## Test
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if (($# < 2)); then
+if (($# < 3)); then
   echo "Uasage: bash tools/dist_test.sh config_file checkpoint gpus_to_use"
   exit 1
 fi
