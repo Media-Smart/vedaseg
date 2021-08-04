@@ -18,9 +18,6 @@ def build_logger(cfg, default_args):
     else:
         rank = 0
 
-    if rank == 0:
-        pass
-
     for handler in cfg['handlers']:
         if handler['type'] == 'StreamHandler':
             instance = logging.StreamHandler(sys.stdout)
@@ -40,7 +37,7 @@ def build_logger(cfg, default_args):
         if rank == 0:
             instance.setLevel(level)
         else:
-            logger.setLevel(logging.ERROR)
+            instance.setLevel(logging.ERROR)
 
         logger.addHandler(instance)
 
